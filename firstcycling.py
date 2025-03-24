@@ -169,14 +169,15 @@ async def get_rider_best_results(rider_id: int, limit: int = 10) -> str:
         
         # Check if results exist
         if best_results is None or not hasattr(best_results, 'results_df') or best_results.results_df.empty:
-            return f"No best results found for rider ID {rider_id}. This rider ID may not exist."
+            return f"No best results found for rider ID {rider_id}. Check if this rider has results on FirstCycling.com."
         
         # Build results information string
         info = ""
         
         # Add rider name if available from header details
-        if hasattr(best_results, 'header_details') and best_results.header_details and 'name' in best_results.header_details:
-            info += f"Best Results for {best_results.header_details['name']}:\n\n"
+        if hasattr(best_results, 'header_details') and best_results.header_details and best_results.header_details.get('current_team'):
+            rider_name = best_results.soup.find('h1').text.strip() if best_results.soup.find('h1') else f"Rider ID {rider_id}"
+            info += f"Best Results for {rider_name}:\n\n"
         else:
             info += f"Best Results for Rider ID {rider_id}:\n\n"
         
@@ -184,16 +185,18 @@ async def get_rider_best_results(rider_id: int, limit: int = 10) -> str:
         results_df = best_results.results_df.head(limit)
         
         for _, row in results_df.iterrows():
-            date = row.get('Date', 'N/A')
-            race = row.get('Race', 'N/A')
             pos = row.get('Pos', 'N/A')
-            category = row.get('CAT', 'N/A')
-            country = row.get('Race_Country', 'N/A')
+            race = row.get('Race', 'N/A')
+            editions = row.get('Editions', 'N/A')
+            category = row.get('CAT', '')
+            country = row.get('Race_Country', '')
             
-            result_line = f"{pos}. {race} ({category})"
-            if date != 'N/A':
-                result_line += f" - {date}"
-            if country != 'N/A':
+            result_line = f"{pos}. {race}"
+            if category:
+                result_line += f" ({category})"
+            if editions != 'N/A':
+                result_line += f" - {editions}"
+            if country:
                 result_line += f" - {country}"
             info += result_line + "\n"
         

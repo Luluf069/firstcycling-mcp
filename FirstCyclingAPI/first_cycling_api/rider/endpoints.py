@@ -3,6 +3,7 @@ from ..parser import parse_date, parse_table, team_link_to_id, img_to_country_co
 
 import pandas as pd
 import bs4
+import io
 
 
 class RiderEndpoint(ParsedEndpoint):
@@ -170,18 +171,109 @@ class RiderVictories(RiderEndpoint):
 								return f"{row['Year']}-01-01"  # Default date if no Date value
 							except:
 								return f"{row['Year']}-01-01"  # Default for any errors
-								
-						# Create a formatted date column
-						self.results_df['Date_Formatted'] = self.results_df.apply(format_date, axis=1)
 						
-						# Reorder columns
-						col_order = ['Year', 'Date', 'Date_Formatted', 'Race', 'CAT']
-						self.results_df = self.results_df[[col for col in col_order if col in self.results_df.columns] + 
-														  [col for col in self.results_df.columns if col not in col_order]]
+						# Create formatted date column
+						self.results_df['Date_Formatted'] = self.results_df.apply(format_date, axis=1)
 				except Exception as e:
-					print(f"Warning: Fallback parsing of victories table failed: {str(e)}")
-					# If all else fails, use an empty DataFrame
+					# If all else fails, just return an empty DataFrame
+					print(f"Warning: Error creating DataFrame from table HTML: {str(e)}")
 					self.results_df = pd.DataFrame()
 		else:
 			# No table found
-			self.results_df = pd.DataFrame()  # Empty DataFrame if no table found
+			self.results_df = pd.DataFrame()
+
+
+class RiderBestResults(RiderEndpoint):
+	"""
+	Rider's best results. Extends RiderEndpoint.
+
+	Attributes
+	----------
+	results_df : pd.DataFrame
+		Table of rider's best results.
+	"""
+
+	def _parse_soup(self):
+		super()._parse_soup()
+		self._get_best_results()
+
+	def _get_best_results(self):
+		# Find table with best results (note different class than victories table)
+		table = self.soup.find('table', {'class': "tablesorter"})
+		if table:
+			# Check if the table has "No data" content
+			no_data_text = table.get_text().strip()
+			if "No data" in no_data_text:
+				# Table exists but has no data
+				self.results_df = pd.DataFrame()
+				return
+				
+			try:
+				# Try to parse the table manually since the structure is different
+				headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+				
+				# Create empty lists to store row data
+				rows_data = []
+				
+				# Get all data rows
+				tbody = table.find('tbody') if table.find('tbody') else table
+				for tr in tbody.find_all('tr'):
+					row_data = {}
+					cells = tr.find_all('td')
+					
+					# Skip empty rows
+					if not cells:
+						continue
+						
+					# Map each cell to its header
+					for i, cell in enumerate(cells):
+						if i < len(headers):
+							header = headers[i]
+							row_data[header] = cell.text.strip()
+							
+							# Extract race ID if available
+							if header == 'Race' and cell.find('a'):
+								href = cell.find('a').get('href', '')
+								import re
+								race_id_match = re.search(r'r=(\d+)', href)
+								if race_id_match:
+									row_data['Race_ID'] = race_id_match.group(1)
+									
+							# Extract country code if available
+							if cell.find('img'):
+								img_src = cell.find('img').get('src', '')
+								country_code = img_to_country_code(cell.find('img'))
+								if country_code:
+									row_data['Race_Country'] = country_code
+					
+					rows_data.append(row_data)
+				
+				# Create DataFrame from the collected data
+				self.results_df = pd.DataFrame(rows_data)
+				
+				# If the DataFrame is empty after parsing, set to empty DataFrame
+				if self.results_df.empty:
+					self.results_df = pd.DataFrame()
+					
+			except Exception as e:
+				# If there's an error in parsing, handle it by creating a basic DataFrame manually
+				print(f"Warning: Error parsing best results table: {str(e)}")
+				# Fallback: Try to create a DataFrame directly from the HTML
+				try:
+					# Parse the basic table
+					html = str(table)
+					self.results_df = pd.read_html(io.StringIO(html), decimal=',')[0]
+					
+					# Check if the table contains "No data"
+					if self.results_df.empty or (self.results_df.shape[0] == 1 and 
+						any("No data" in str(cell) for cell in self.results_df.iloc[0])):
+						self.results_df = pd.DataFrame()
+						return
+						
+				except Exception as e:
+					# If all else fails, just return an empty DataFrame
+					print(f"Warning: Error creating DataFrame from table HTML: {str(e)}")
+					self.results_df = pd.DataFrame()
+		else:
+			# No table found
+			self.results_df = pd.DataFrame()

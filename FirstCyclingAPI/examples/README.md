@@ -1,60 +1,97 @@
 # FirstCycling API Examples
 
-This directory contains example scripts demonstrating how to use the FirstCycling API package.
+This directory contains example scripts that demonstrate how to use the FirstCycling API.
 
 ## Available Examples
 
-### Rider Victories (`rider_victories.py`)
+### 1. `rider_victories.py`
 
-This script demonstrates how to fetch and analyze a rider's career victories.
+This script demonstrates how to retrieve a rider's career victories using the API.
 
-**Usage:**
-```
+#### Usage:
+
+```bash
 python rider_victories.py [rider_id] [--debug]
 ```
 
-If no rider ID is provided, it defaults to Mathieu van der Poel (ID: 16672).
+Where:
+- `rider_id` is the unique ID of the rider on FirstCycling.com (e.g., 16672 for Mathieu van der Poel)
+- `--debug` is an optional flag to print debug information
 
-**Example Output:**
+#### Example Output:
+
 ```
 Rider ID: 16672
-
-Found 286 career victories:
+Found 43 career victories:
 
 Victories by year:
-2012: 7 wins
-2013: 23 wins
+2024: 4 wins
+2023: 9 wins
 ...
 
 Victories by category:
-CX: C1: 77
-CX: CDM: 49
+1.UWT: 19
+NC: 5
 ...
 
 Most recent 10 victories:
-2025-03-22: Milano-Sanremo (1.UWT)
-2025-03-04: Le Samyn (1.1)
+2024-03-09: Milano-Sanremo (1.UWT)
+2024-03-02: Strade Bianche (1.UWT)
 ...
 ```
 
-**Notes on Data Availability:**
-- Some riders may show "No victories found" even if they are successful riders. The FirstCycling website data is not always complete or may be structured differently for some riders.
-- If you encounter issues with a specific rider, you can use the `--debug` flag to see more details about what's being retrieved.
+### 2. `rider_best_results.py`
 
-## Running Examples
+This script demonstrates how to retrieve a rider's best career results using the API.
 
-To run the examples:
+#### Usage:
 
-1. Make sure you're in the FirstCyclingAPI directory
-2. Run the example script with Python 3:
+```bash
+python rider_best_results.py [rider_id] [--debug]
+```
+
+Where:
+- `rider_id` is the unique ID of the rider on FirstCycling.com (e.g., 16672 for Mathieu van der Poel)
+- `--debug` is an optional flag to print debug information
+
+#### Example Output:
+
+```
+Rider ID: 16672
+Found 7 best results:
+
+Top 10 best results:
+1. 1st. Ronde van Vlaanderen - 20', 22', 24'
+2. 1st. Paris-Roubaix - 23', 24'
+3. 1st. Milano-Sanremo - 23', 25'
+4. 1st. World Championship RR - 23'
+5. 1st. Renewi Tour - 20'
+6. 1st. Dwars door Vlaanderen - 19', 22'
+7. 1st. Tour de France | 1 Stage
+```
+
+## Notes on Data Availability
+
+- Some riders may show "No victories found" or "No best results found" due to incomplete data on the FirstCycling website.
+- You can use the `--debug` flag to get more information about what data is being returned from the API.
+
+## How to Run the Examples
+
+1. Make sure you have installed the required dependencies:
+   ```bash
+   pip install -r requirements.txt
    ```
-   python3 examples/rider_victories.py
+
+2. Run an example script:
+   ```bash
+   python rider_victories.py 16672
    ```
 
 ## Finding Rider IDs
 
-Rider IDs can be found in the URL of a rider's profile on FirstCycling.com. For example:
-- Mathieu van der Poel: https://firstcycling.com/rider.php?r=16672 (ID: 16672)
-- Tadej Pogačar: https://firstcycling.com/rider.php?r=25026 (ID: 25026)
-- Wout van Aert: https://firstcycling.com/rider.php?r=16276 (ID: 16276)
-- Peter Sagan: https://firstcycling.com/rider.php?r=9593 (ID: 9593) 
+The rider ID can be found in the URL of the rider's profile on FirstCycling.com.
+
+Examples:
+- Mathieu van der Poel: https://firstcycling.com/rider.php?r=16672
+- Tadej Pogačar: https://firstcycling.com/rider.php?r=25026
+- Wout van Aert: https://firstcycling.com/rider.php?r=16276 
