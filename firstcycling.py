@@ -537,7 +537,7 @@ async def get_rider_team_and_ranking(rider_id: int) -> str:
                     info += f"Team and Ranking History for Rider ID {rider_id}:\n\n"
             else:
                 info += f"Team and Ranking History for Rider ID {rider_id}:\n\n"
-
+        
         # Check if we need to use the default parsing or direct HTML parsing
         if hasattr(team_ranking, 'results_df') and not (team_ranking.results_df is None or team_ranking.results_df.empty):
             # Use the default parsed results
@@ -704,32 +704,32 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
         if hasattr(race_history, 'results_df') and not (race_history.results_df is None or race_history.results_df.empty):
             # Use standard parsing
             results_df = race_history.results_df
+        
+        # Filter by year if specified
+        if year:
+            results_df = results_df[results_df['Year'] == year]
+        
+        # Sort by date (most recent first)
+        results_df = results_df.sort_values('Date', ascending=False)
+        
+        # Group by year
+        for year in results_df['Year'].unique():
+            year_data = results_df[results_df['Year'] == year]
+            info += f"{year}:\n"
             
-            # Filter by year if specified
-            if year:
-                results_df = results_df[results_df['Year'] == year]
-            
-            # Sort by date (most recent first)
-            results_df = results_df.sort_values('Date', ascending=False)
-            
-            # Group by year
-            for year in results_df['Year'].unique():
-                year_data = results_df[results_df['Year'] == year]
-                info += f"{year}:\n"
+            for _, row in year_data.iterrows():
+                date = row.get('Date', 'N/A')
+                race = row.get('Race', 'N/A')
+                pos = row.get('Pos', 'N/A')
+                category = row.get('CAT', 'N/A')
+                time = row.get('Time', '')
                 
-                for _, row in year_data.iterrows():
-                    date = row.get('Date', 'N/A')
-                    race = row.get('Race', 'N/A')
-                    pos = row.get('Pos', 'N/A')
-                    category = row.get('CAT', 'N/A')
-                    time = row.get('Time', '')
-                    
-                    result_line = f"  {date} - {race} ({category}): {pos}"
-                    if time:
-                        result_line += f" - {time}"
-                    info += result_line + "\n"
-                
-                info += "\n"
+                result_line = f"  {date} - {race} ({category}): {pos}"
+                if time:
+                    result_line += f" - {time}"
+                info += result_line + "\n"
+            
+            info += "\n"
         else:
             # Direct HTML parsing
             if not hasattr(race_history, 'soup') or not race_history.soup:
@@ -784,11 +784,11 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
                         try:
                             # If year is last part (e.g., "01.01.2023")
                             race_year = int(date_text[-4:])
-                        except:
+                        except Exception:
                             # If year is first part (e.g., "2023-01-01")
                             try:
                                 race_year = int(date_text[:4])
-                            except:
+                            except Exception:
                                 pass
                 
                 if race_year:
@@ -876,39 +876,32 @@ async def search_race(query: str) -> str:
 
 @mcp.tool(
     description="""Get a rider's results in one-day races, optionally filtered by year.
-    This tool provides detailed information about a professional cyclist's performance in one-day races,
-    including their positions, race details, and achievements. One-day races are important events 
-    in the cycling calendar that take place within a single day.
+    This tool retrieves detailed information about a rider's performance in one-day races 
+    (classics and one-day events). It provides comprehensive data about positions, times, 
+    and race categories. Results can be filtered by a specific year.
     
     Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
     
     Example usage:
-    - Get one-day race results for Mathieu van der Poel (ID: 16975)
-    - Get 2023 one-day race results for Wout van Aert (ID: 16976)
+    - Get one-day race results for Mathieu van der Poel (ID: 16672)
+    - Get 2023 one-day race results for Wout van Aert (ID: 16948)
     
     Returns a formatted string with:
-    - Results organized by year
-    - Race name, date, and category
+    - Results in one-day races organized by year
     - Position and time for each race
-    - Comprehensive list of all one-day race participations"""
+    - Race category and details
+    - Chronological organization"""
 )
 async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
     """Get a rider's results in one-day races, optionally filtered by year.
 
-    This tool provides detailed information about a professional cyclist's performance in one-day races,
-    including their positions, race details, and achievements. One-day races are important events 
-    in the cycling calendar that take place within a single day.
+    This tool retrieves detailed information about a rider's performance in one-day races 
+    (classics and one-day events). It provides comprehensive data about positions, times, 
+    and race categories. Results can be filtered by a specific year.
 
     Args:
-        rider_id: The FirstCycling rider ID (e.g., 16975 for Mathieu van der Poel)
+        rider_id: The FirstCycling rider ID (e.g., 16672 for Mathieu van der Poel)
         year: Optional year to filter results (e.g., 2023). If not provided, returns all years.
-
-    Returns:
-        str: A formatted string containing the rider's one-day race results, including:
-             - Race name and date
-             - Position achieved
-             - Race category and details
-             - Results organized by year
     """
     try:
         # Create a rider instance
@@ -950,50 +943,26 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
             if year:
                 results_df = results_df[results_df['Year'] == year]
             
-            # Sort by date (most recent first)
-            if 'Date' in results_df.columns:
-                results_df = results_df.sort_values('Date', ascending=False)
-            elif 'Year' in results_df.columns:
-                results_df = results_df.sort_values('Year', ascending=False)
+            # Sort by year (most recent first)
+            results_df = results_df.sort_values('Year', ascending=False)
             
             # Group by year
-            if 'Year' in results_df.columns:
-                for year_val in results_df['Year'].unique():
-                    year_data = results_df[results_df['Year'] == year_val]
-                    info += f"{year_val}:\n"
-                    
-                    for _, row in year_data.iterrows():
-                        date = row.get('Date', 'N/A')
-                        race = row.get('Race', 'N/A')
-                        pos = row.get('Pos', 'N/A')
-                        category = row.get('CAT', 'N/A')
-                        time = row.get('Time', '')
-                        
-                        result_line = f"  {date} - {race}"
-                        if category and category != 'N/A':
-                            result_line += f" ({category})"
-                        result_line += f": {pos}"
-                        if time:
-                            result_line += f" - {time}"
-                        info += result_line + "\n"
-                    
-                    info += "\n"
-            else:
-                # If no Year column, just list all results
-                for _, row in results_df.iterrows():
+            for year_val in results_df['Year'].unique():
+                year_data = results_df[results_df['Year'] == year_val]
+                info += f"{year_val}:\n"
+                
+                # Sort by date within year
+                year_data = year_data.sort_values('Date', ascending=False)
+                
+                for _, row in year_data.iterrows():
                     date = row.get('Date', 'N/A')
                     race = row.get('Race', 'N/A')
                     pos = row.get('Pos', 'N/A')
                     category = row.get('CAT', 'N/A')
-                    time = row.get('Time', '')
                     
-                    result_line = f"  {date} - {race}"
-                    if category and category != 'N/A':
-                        result_line += f" ({category})"
-                    result_line += f": {pos}"
-                    if time:
-                        result_line += f" - {time}"
-                    info += result_line + "\n"
+                    info += f"  {date} - {race} ({category}): {pos}\n"
+                
+                info += "\n"
         else:
             # Direct HTML parsing
             if not hasattr(one_day_results, 'soup') or not one_day_results.soup:
@@ -1001,28 +970,30 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
             
             soup = one_day_results.soup
             
-            # Find one-day races table
+            # Find one-day races results table
             tables = soup.find_all('table')
-            races_table = None
+            results_table = None
             
-            # Look for the table with one-day race results
-            # Usually has headers like Date, Race, Position, etc.
+            # Look for the appropriate table that contains one-day races results
             for table in tables:
+                # Check table headers to find the right one
                 headers = [th.text.strip() for th in table.find_all('th')]
-                if len(headers) >= 3 and (("Date" in headers or "Race" in headers) and "Pos" in headers):
-                    races_table = table
+                if len(headers) >= 3 and "Race" in headers and ("Date" in headers or "Year" in headers):
+                    results_table = table
                     break
             
-            if not races_table:
+            if not results_table:
                 return f"Could not find one-day race results table for rider ID {rider_id}."
             
-            # Parse race data
-            rows = races_table.find_all('tr')
+            # Parse one-day races data
+            rows = results_table.find_all('tr')
             race_data = []
             
             # Get column indices from header row
             headers = [th.text.strip() for th in rows[0].find_all('th')]
             
+            # Find the indices of key columns
+            year_idx = next((i for i, h in enumerate(headers) if "Year" in h), None)
             date_idx = next((i for i, h in enumerate(headers) if "Date" in h), None)
             race_idx = next((i for i, h in enumerate(headers) if "Race" in h), None)
             pos_idx = next((i for i, h in enumerate(headers) if "Pos" in h), None)
@@ -1035,38 +1006,44 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
                     continue
                 
                 # Extract data
+                race_year = cols[year_idx].text.strip() if year_idx is not None and year_idx < len(cols) else None
+                
+                # If we don't have a year column, try to extract from date
+                if race_year is None and date_idx is not None and date_idx < len(cols):
+                    date_text = cols[date_idx].text.strip()
+                    # Try to extract year from date format (e.g., 01.01.2023 or 2023-01-01)
+                    try:
+                        if len(date_text) >= 4:
+                            if date_text[-4:].isdigit():
+                                race_year = date_text[-4:]
+                            elif date_text[:4].isdigit():
+                                race_year = date_text[:4]
+                    except Exception:
+                        pass
+                
+                # If we still don't have a year, use the next row
+                if race_year is None or not race_year.isdigit():
+                    continue
+                
+                # Convert year to int for comparison
+                race_year_int = int(race_year)
+                
+                # Skip if a specific year was requested and this race is from a different year
+                if year and race_year_int != year:
+                    continue
+                
                 date_text = cols[date_idx].text.strip() if date_idx is not None and date_idx < len(cols) else "N/A"
                 race_text = cols[race_idx].text.strip() if race_idx is not None and race_idx < len(cols) else "N/A"
                 pos_text = cols[pos_idx].text.strip() if pos_idx is not None and pos_idx < len(cols) else "N/A"
                 cat_text = cols[cat_idx].text.strip() if cat_idx is not None and cat_idx < len(cols) else "N/A"
                 
-                # Extract year from date (format may vary, but often includes year)
-                race_year = None
-                if date_text != "N/A":
-                    # Try common date formats to extract year
-                    if len(date_text) >= 4:
-                        try:
-                            # If year is last part (e.g., "01.01.2023")
-                            race_year = int(date_text[-4:])
-                        except:
-                            # If year is first part (e.g., "2023-01-01")
-                            try:
-                                race_year = int(date_text[:4])
-                            except:
-                                pass
-                
-                if race_year:
-                    # Skip if a specific year was requested and this race is from a different year
-                    if year and race_year != year:
-                        continue
-                    
-                    race_data.append({
-                        'Year': race_year,
-                        'Date': date_text,
-                        'Race': race_text,
-                        'Pos': pos_text,
-                        'CAT': cat_text
-                    })
+                race_data.append({
+                    'Year': race_year_int,
+                    'Date': date_text,
+                    'Race': race_text,
+                    'Pos': pos_text,
+                    'CAT': cat_text
+                })
             
             # Group by year
             year_grouped = {}
@@ -1081,12 +1058,10 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
                 races = year_grouped[year_val]
                 info += f"{year_val}:\n"
                 
+                # Sort by date within year (can be complex due to different date formats)
+                # For now, just display as is
                 for race in races:
-                    result_line = f"  {race['Date']} - {race['Race']}"
-                    if race['CAT'] and race['CAT'] != 'N/A':
-                        result_line += f" ({race['CAT']})"
-                    result_line += f": {race['Pos']}"
-                    info += result_line + "\n"
+                    info += f"  {race['Date']} - {race['Race']} ({race['CAT']}): {race['Pos']}\n"
                 
                 info += "\n"
             
@@ -1098,10 +1073,10 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
         return f"Error retrieving one-day race results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
 @mcp.tool(
-    description="""Get a rider's results in multi-day stage races, optionally filtered by year.
-    This tool provides detailed information about a professional cyclist's performance in stage races,
-    which are cycling competitions that take place over multiple days with different stages. It includes
-    overall classifications, stage results, and special achievements in these events.
+    description="""Get a rider's results in stage races, optionally filtered by year.
+    This tool retrieves detailed information about a rider's performance in stage races
+    (multi-day races like Tour de France, Giro d'Italia, etc.). It provides comprehensive data 
+    about positions, times, and race categories. Results can be filtered by a specific year.
     
     Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
     
@@ -1110,29 +1085,21 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
     - Get 2023 stage race results for Jonas Vingegaard (ID: 16974)
     
     Returns a formatted string with:
-    - Results organized by year
-    - Race name, date, and category
-    - Overall position and time
-    - Notable stage results
-    - Comprehensive list of all stage race participations"""
+    - Results in stage races organized by year
+    - Position and time for each race
+    - Race category and details
+    - Chronological organization"""
 )
 async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
-    """Get a rider's results in multi-day stage races, optionally filtered by year.
+    """Get a rider's results in stage races, optionally filtered by year.
 
-    This tool provides detailed information about a professional cyclist's performance in stage races,
-    which are cycling competitions that take place over multiple days with different stages. It includes
-    overall classifications, stage results, and special achievements in these events.
+    This tool retrieves detailed information about a rider's performance in stage races
+    (multi-day races like Tour de France, Giro d'Italia, etc.). It provides comprehensive data 
+    about positions, times, and race categories. Results can be filtered by a specific year.
 
     Args:
         rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
         year: Optional year to filter results (e.g., 2023). If not provided, returns all years.
-
-    Returns:
-        str: A formatted string containing the rider's stage race results, including:
-             - Race name and date
-             - Overall position and time
-             - Notable stage results
-             - Results organized by year
     """
     try:
         # Create a rider instance
@@ -1174,50 +1141,26 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
             if year:
                 results_df = results_df[results_df['Year'] == year]
             
-            # Sort by date (most recent first)
-            if 'Date' in results_df.columns:
-                results_df = results_df.sort_values('Date', ascending=False)
-            elif 'Year' in results_df.columns:
-                results_df = results_df.sort_values('Year', ascending=False)
+            # Sort by year (most recent first)
+            results_df = results_df.sort_values('Year', ascending=False)
             
             # Group by year
-            if 'Year' in results_df.columns:
-                for year_val in results_df['Year'].unique():
-                    year_data = results_df[results_df['Year'] == year_val]
-                    info += f"{year_val}:\n"
-                    
-                    for _, row in year_data.iterrows():
-                        date = row.get('Date', 'N/A')
-                        race = row.get('Race', 'N/A')
-                        pos = row.get('Pos', 'N/A')
-                        category = row.get('CAT', 'N/A')
-                        time = row.get('Time', '')
-                        
-                        result_line = f"  {date} - {race}"
-                        if category and category != 'N/A':
-                            result_line += f" ({category})"
-                        result_line += f": {pos}"
-                        if time:
-                            result_line += f" - {time}"
-                        info += result_line + "\n"
-                    
-                    info += "\n"
-            else:
-                # If no Year column, just list all results
-                for _, row in results_df.iterrows():
+            for year_val in results_df['Year'].unique():
+                year_data = results_df[results_df['Year'] == year_val]
+                info += f"{year_val}:\n"
+                
+                # Sort by date within year
+                year_data = year_data.sort_values('Date', ascending=False)
+                
+                for _, row in year_data.iterrows():
                     date = row.get('Date', 'N/A')
                     race = row.get('Race', 'N/A')
                     pos = row.get('Pos', 'N/A')
                     category = row.get('CAT', 'N/A')
-                    time = row.get('Time', '')
                     
-                    result_line = f"  {date} - {race}"
-                    if category and category != 'N/A':
-                        result_line += f" ({category})"
-                    result_line += f": {pos}"
-                    if time:
-                        result_line += f" - {time}"
-                    info += result_line + "\n"
+                    info += f"  {date} - {race} ({category}): {pos}\n"
+                
+                info += "\n"
         else:
             # Direct HTML parsing
             if not hasattr(stage_results, 'soup') or not stage_results.soup:
@@ -1225,28 +1168,30 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
             
             soup = stage_results.soup
             
-            # Find stage races table
+            # Find stage races results table
             tables = soup.find_all('table')
-            races_table = None
+            results_table = None
             
-            # Look for the table with stage race results
-            # Usually has headers like Date, Race, Position, etc.
+            # Look for the appropriate table that contains stage races results
             for table in tables:
+                # Check table headers to find the right one
                 headers = [th.text.strip() for th in table.find_all('th')]
-                if len(headers) >= 3 and (("Date" in headers or "Race" in headers) and "Pos" in headers):
-                    races_table = table
+                if len(headers) >= 3 and "Race" in headers and ("Date" in headers or "Year" in headers):
+                    results_table = table
                     break
             
-            if not races_table:
+            if not results_table:
                 return f"Could not find stage race results table for rider ID {rider_id}."
             
-            # Parse race data
-            rows = races_table.find_all('tr')
+            # Parse stage races data
+            rows = results_table.find_all('tr')
             race_data = []
             
             # Get column indices from header row
             headers = [th.text.strip() for th in rows[0].find_all('th')]
             
+            # Find the indices of key columns
+            year_idx = next((i for i, h in enumerate(headers) if "Year" in h), None)
             date_idx = next((i for i, h in enumerate(headers) if "Date" in h), None)
             race_idx = next((i for i, h in enumerate(headers) if "Race" in h), None)
             pos_idx = next((i for i, h in enumerate(headers) if "Pos" in h), None)
@@ -1259,38 +1204,44 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
                     continue
                 
                 # Extract data
+                race_year = cols[year_idx].text.strip() if year_idx is not None and year_idx < len(cols) else None
+                
+                # If we don't have a year column, try to extract from date
+                if race_year is None and date_idx is not None and date_idx < len(cols):
+                    date_text = cols[date_idx].text.strip()
+                    # Try to extract year from date format (e.g., 01.01.2023 or 2023-01-01)
+                    try:
+                        if len(date_text) >= 4:
+                            if date_text[-4:].isdigit():
+                                race_year = date_text[-4:]
+                            elif date_text[:4].isdigit():
+                                race_year = date_text[:4]
+                    except Exception:
+                        pass
+                
+                # If we still don't have a year, use the next row
+                if race_year is None or not race_year.isdigit():
+                    continue
+                
+                # Convert year to int for comparison
+                race_year_int = int(race_year)
+                
+                # Skip if a specific year was requested and this race is from a different year
+                if year and race_year_int != year:
+                    continue
+                
                 date_text = cols[date_idx].text.strip() if date_idx is not None and date_idx < len(cols) else "N/A"
                 race_text = cols[race_idx].text.strip() if race_idx is not None and race_idx < len(cols) else "N/A"
                 pos_text = cols[pos_idx].text.strip() if pos_idx is not None and pos_idx < len(cols) else "N/A"
                 cat_text = cols[cat_idx].text.strip() if cat_idx is not None and cat_idx < len(cols) else "N/A"
                 
-                # Extract year from date (format may vary, but often includes year)
-                race_year = None
-                if date_text != "N/A":
-                    # Try common date formats to extract year
-                    if len(date_text) >= 4:
-                        try:
-                            # If year is last part (e.g., "01.01.2023")
-                            race_year = int(date_text[-4:])
-                        except:
-                            # If year is first part (e.g., "2023-01-01")
-                            try:
-                                race_year = int(date_text[:4])
-                            except:
-                                pass
-                
-                if race_year:
-                    # Skip if a specific year was requested and this race is from a different year
-                    if year and race_year != year:
-                        continue
-                    
-                    race_data.append({
-                        'Year': race_year,
-                        'Date': date_text,
-                        'Race': race_text,
-                        'Pos': pos_text,
-                        'CAT': cat_text
-                    })
+                race_data.append({
+                    'Year': race_year_int,
+                    'Date': date_text,
+                    'Race': race_text,
+                    'Pos': pos_text,
+                    'CAT': cat_text
+                })
             
             # Group by year
             year_grouped = {}
@@ -1305,12 +1256,10 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
                 races = year_grouped[year_val]
                 info += f"{year_val}:\n"
                 
+                # Sort by date within year (can be complex due to different date formats)
+                # For now, just display as is
                 for race in races:
-                    result_line = f"  {race['Date']} - {race['Race']}"
-                    if race['CAT'] and race['CAT'] != 'N/A':
-                        result_line += f" ({race['CAT']})"
-                    result_line += f": {race['Pos']}"
-                    info += result_line + "\n"
+                    info += f"  {race['Date']} - {race['Race']} ({race['CAT']}): {race['Pos']}\n"
                 
                 info += "\n"
             
@@ -1320,364 +1269,6 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
         return info
     except Exception as e:
         return f"Error retrieving stage race results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
-
-@mcp.tool(
-    description="""Retrieve the complete team history of a rider throughout their career. This tool provides 
-    a chronological list of all teams a rider has been a part of, including the years they rode for each team.
-    It helps track a cyclist's career progression through different teams.
-    
-    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
-    
-    Example usage:
-    - Get team history for Tadej Pogačar (ID: 16973)
-    - Get team history for Mathieu van der Poel (ID: 16975)
-    
-    Returns a formatted string with:
-    - Complete chronological list of teams
-    - Years with each team
-    - Current team affiliation
-    - Career timeline overview"""
-)
-async def get_rider_teams(rider_id: int) -> str:
-    """Retrieve the complete team history of a rider throughout their career.
-
-    This tool provides a chronological list of all teams a rider has been a part of, 
-    including the years they rode for each team. It helps track a cyclist's career progression 
-    through different teams.
-
-    Args:
-        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
-
-    Returns:
-        str: A formatted string containing the rider's team history:
-             - Team names with years of affiliation
-             - Current team highlighted
-             - Complete chronological progression
-    """
-    try:
-        # Create a rider instance
-        rider = Rider(rider_id)
-        
-        # Get teams information
-        teams = rider.teams()
-        
-        # Build information string
-        info = ""
-        
-        # Get rider name
-        rider_name = None
-        if hasattr(teams, 'header_details') and teams.header_details and 'name' in teams.header_details:
-            rider_name = teams.header_details['name']
-        else:
-            # Try to extract rider name from page title
-            if hasattr(teams, 'soup') and teams.soup:
-                title = teams.soup.find('title')
-                if title and '|' in title.text:
-                    rider_name = title.text.split('|')[0].strip()
-        
-        # Format title
-        if rider_name:
-            info += f"Team History for {rider_name}:\n\n"
-        else:
-            info += f"Team History for Rider ID {rider_id}:\n\n"
-        
-        # Check if we need to use standard parsing or direct HTML parsing
-        if hasattr(teams, 'results_df') and not (teams.results_df is None or teams.results_df.empty):
-            # Use standard parsing
-            results_df = teams.results_df
-            
-            # Sort by year (most recent first)
-            if 'Year' in results_df.columns:
-                results_df = results_df.sort_values('Year', ascending=False)
-            
-            # List teams by year
-            for _, row in results_df.iterrows():
-                year = row.get('Year', 'N/A')
-                team = row.get('Team', 'N/A')
-                info += f"{year}: {team}\n"
-        else:
-            # Direct HTML parsing
-            if not hasattr(teams, 'soup') or not teams.soup:
-                return f"No team history found for rider ID {rider_id}. This rider ID may not exist."
-            
-            soup = teams.soup
-            
-            # Find teams table
-            tables = soup.find_all('table')
-            teams_table = None
-            
-            # Look for the table with team history
-            # Usually has headers like Year, Team, etc.
-            for table in tables:
-                headers = [th.text.strip() for th in table.find_all('th')]
-                if len(headers) >= 2 and "Year" in headers and "Team" in headers:
-                    teams_table = table
-                    break
-            
-            if not teams_table:
-                return f"Could not find team history table for rider ID {rider_id}."
-            
-            # Parse team data
-            rows = teams_table.find_all('tr')
-            team_data = []
-            
-            # Get column indices from header row
-            headers = [th.text.strip() for th in rows[0].find_all('th')]
-            
-            year_idx = next((i for i, h in enumerate(headers) if "Year" in h), None)
-            team_idx = next((i for i, h in enumerate(headers) if "Team" in h), None)
-            
-            # Skip header row
-            for row in rows[1:]:
-                cols = row.find_all('td')
-                if len(cols) < 2:  # Ensure it's a data row
-                    continue
-                
-                # Extract data
-                year_text = cols[year_idx].text.strip() if year_idx is not None and year_idx < len(cols) else "N/A"
-                
-                # Extract team (might be in a link)
-                team_col = cols[team_idx] if team_idx is not None and team_idx < len(cols) else None
-                if team_col:
-                    team_link = team_col.find('a')
-                    team_text = team_link.text.strip() if team_link else team_col.text.strip()
-                else:
-                    team_text = "N/A"
-                
-                team_data.append({
-                    'Year': year_text,
-                    'Team': team_text
-                })
-            
-            # Sort by year (most recent first)
-            team_data.sort(key=lambda x: x['Year'], reverse=True)
-            
-            # Build the information string
-            for team in team_data:
-                info += f"{team['Year']}: {team['Team']}\n"
-            
-            if not team_data:
-                info += "No team history found for this rider.\n"
-        
-        return info
-    except Exception as e:
-        return f"Error retrieving team history for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
-
-@mcp.tool(
-    description="""Get a list of a rider's career victories, with optional filters for WorldTour or UCI races.
-    This tool provides comprehensive information about all races a professional cyclist has won throughout 
-    their career. It includes race details, dates, and categories of victories, offering insights into 
-    the rider's achievements and specialties.
-    
-    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
-    
-    Example usage:
-    - Get all victories for Tadej Pogačar (ID: 16973)
-    - Get UCI victories for Mathieu van der Poel (ID: 16975)
-    - Get WorldTour victories for Jonas Vingegaard (ID: 16974)
-    
-    Returns a formatted string with:
-    - List of all career victories
-    - Race details, dates, and categories
-    - Optional filtering for WorldTour or UCI races
-    - Count of total victories by type"""
-)
-async def get_rider_victories(rider_id: int, world_tour: bool = False, uci: bool = False) -> str:
-    """Get a list of a rider's career victories, with optional filters for WorldTour or UCI races.
-
-    This tool provides comprehensive information about all races a professional cyclist has won throughout 
-    their career. It includes race details, dates, and categories of victories, offering insights into 
-    the rider's achievements and specialties.
-
-    Args:
-        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
-        world_tour: If True, only include WorldTour victories
-        uci: If True, only include UCI-classified victories
-
-    Returns:
-        str: A formatted string containing the rider's victories:
-             - Race names, dates, and categories
-             - Classification by race type and importance
-             - Total count of victories
-    """
-    try:
-        # Create a rider instance
-        rider = Rider(rider_id)
-        
-        # Get victories information
-        victories = rider.victories(world_tour=world_tour, uci=uci)
-        
-        # Build information string
-        info = ""
-        
-        # Get rider name
-        rider_name = None
-        if hasattr(victories, 'header_details') and victories.header_details and 'name' in victories.header_details:
-            rider_name = victories.header_details['name']
-        else:
-            # Try to extract rider name from page title
-            if hasattr(victories, 'soup') and victories.soup:
-                title = victories.soup.find('title')
-                if title and '|' in title.text:
-                    rider_name = title.text.split('|')[0].strip()
-        
-        # Format title based on filter options
-        if rider_name:
-            info += f"Victories for {rider_name}"
-        else:
-            info += f"Victories for Rider ID {rider_id}"
-        
-        if world_tour:
-            info += " (WorldTour races only)"
-        elif uci:
-            info += " (UCI races only)"
-        info += ":\n\n"
-        
-        # Check if we need to use standard parsing or direct HTML parsing
-        if hasattr(victories, 'results_df') and not (victories.results_df is None or victories.results_df.empty):
-            # Use standard parsing
-            results_df = victories.results_df
-            
-            # Sort by date (most recent first)
-            if 'Date' in results_df.columns:
-                results_df = results_df.sort_values('Date', ascending=False)
-            elif 'Year' in results_df.columns:
-                results_df = results_df.sort_values('Year', ascending=False)
-            
-            # Group by year if available
-            if 'Year' in results_df.columns:
-                for year in results_df['Year'].unique():
-                    year_data = results_df[results_df['Year'] == year]
-                    info += f"{year}:\n"
-                    
-                    for _, row in year_data.iterrows():
-                        date = row.get('Date', 'N/A')
-                        race = row.get('Race', 'N/A')
-                        category = row.get('CAT', 'N/A')
-                        
-                        result_line = f"  {date} - {race}"
-                        if category and category != 'N/A':
-                            result_line += f" ({category})"
-                        info += result_line + "\n"
-                    
-                    info += "\n"
-            else:
-                # If no Year column, just list all victories
-                for _, row in results_df.iterrows():
-                    date = row.get('Date', 'N/A')
-                    race = row.get('Race', 'N/A')
-                    category = row.get('CAT', 'N/A')
-                    
-                    result_line = f"  {date} - {race}"
-                    if category and category != 'N/A':
-                        result_line += f" ({category})"
-                    info += result_line + "\n"
-            
-            # Add total count
-            info += f"\nTotal victories: {len(results_df)}\n"
-        else:
-            # Direct HTML parsing
-            if not hasattr(victories, 'soup') or not victories.soup:
-                return f"No victories found for rider ID {rider_id}. This rider ID may not exist."
-            
-            soup = victories.soup
-            
-            # Find victories table
-            tables = soup.find_all('table')
-            victories_table = None
-            
-            # Look for the table with victories
-            # Usually has headers like Date, Race, Category, etc.
-            for table in tables:
-                headers = [th.text.strip() for th in table.find_all('th')]
-                if len(headers) >= 2 and (("Date" in headers or "Race" in headers)):
-                    victories_table = table
-                    break
-            
-            if not victories_table:
-                return f"Could not find victories table for rider ID {rider_id}."
-            
-            # Parse victory data
-            rows = victories_table.find_all('tr')
-            victory_data = []
-            
-            # Get column indices from header row
-            headers = [th.text.strip() for th in rows[0].find_all('th')]
-            
-            date_idx = next((i for i, h in enumerate(headers) if "Date" in h), None)
-            race_idx = next((i for i, h in enumerate(headers) if "Race" in h), None)
-            cat_idx = next((i for i, h in enumerate(headers) if "CAT" in h), None)
-            
-            # Skip header row
-            for row in rows[1:]:
-                cols = row.find_all('td')
-                if len(cols) < 2:  # Ensure it's a data row
-                    continue
-                
-                # Extract data
-                date_text = cols[date_idx].text.strip() if date_idx is not None and date_idx < len(cols) else "N/A"
-                race_text = cols[race_idx].text.strip() if race_idx is not None and race_idx < len(cols) else "N/A"
-                cat_text = cols[cat_idx].text.strip() if cat_idx is not None and cat_idx < len(cols) else "N/A"
-                
-                # Extract year from date (format may vary, but often includes year)
-                victory_year = None
-                if date_text != "N/A":
-                    # Try common date formats to extract year
-                    if len(date_text) >= 4:
-                        try:
-                            # If year is last part (e.g., "01.01.2023")
-                            victory_year = date_text[-4:]
-                        except:
-                            # If year is first part (e.g., "2023-01-01")
-                            try:
-                                victory_year = date_text[:4]
-                            except:
-                                pass
-                
-                # Apply filters if needed
-                if world_tour and not (cat_text and "UWT" in cat_text):
-                    continue
-                
-                if uci and not (cat_text and any(c in cat_text for c in ["UWT", "1.", "2.", "CC", "WC"])):
-                    continue
-                
-                victory_data.append({
-                    'Year': victory_year or "Unknown",
-                    'Date': date_text,
-                    'Race': race_text,
-                    'CAT': cat_text
-                })
-            
-            # Group by year
-            year_grouped = {}
-            for victory in victory_data:
-                year_val = victory['Year']
-                if year_val not in year_grouped:
-                    year_grouped[year_val] = []
-                year_grouped[year_val].append(victory)
-            
-            # Sort years (most recent first)
-            for year_val in sorted(year_grouped.keys(), reverse=True):
-                victories_list = year_grouped[year_val]
-                info += f"{year_val}:\n"
-                
-                for victory in victories_list:
-                    result_line = f"  {victory['Date']} - {victory['Race']}"
-                    if victory['CAT'] and victory['CAT'] != 'N/A':
-                        result_line += f" ({victory['CAT']})"
-                    info += result_line + "\n"
-                
-                info += "\n"
-            
-            # Add total count
-            info += f"Total victories: {len(victory_data)}\n"
-            
-            if not victory_data:
-                info += "No victories found for this rider with the specified filters.\n"
-        
-        return info
-    except Exception as e:
-        return f"Error retrieving victories for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
 if __name__ == "__main__":
     # Initialize and run the server
