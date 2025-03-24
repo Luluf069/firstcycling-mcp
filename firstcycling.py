@@ -23,24 +23,50 @@ async def get_rider_info(rider_id: int) -> str:
     try:
         # Create a rider instance and fetch data
         rider = Rider(rider_id)
-        profile = rider.get_profile()
-        results = rider.get_year_results()
         
-        # Format rider information
-        info = f"Name: {profile.get('name', 'N/A')}\n"
-        info += f"Team: {profile.get('team', 'N/A')}\n"
-        info += f"Nationality: {profile.get('nationality', 'N/A')}\n"
+        # Get year results for most recent year (default behavior when no year is specified)
+        year_results = rider.year_results()
         
-        if profile.get('date_of_birth'):
-            info += f"Date of Birth: {profile.get('date_of_birth')}\n"
+        # Get header and sidebar details
+        header_details = year_results.header_details
+        sidebar_details = year_results.sidebar_details
         
-        info += f"UCI ID: {profile.get('uci_id', 'N/A')}\n\n"
+        # Format basic rider information
+        info = f"Name: {rider_id}\n"  # We'll replace this with actual name if available
+        
+        # Add current team if available
+        if header_details.get('current_team'):
+            info = f"Name: {header_details.get('current_team').split('(')[0].strip()}\n"
+            info += f"Team: {header_details.get('current_team')}\n"
+        
+        # Add Twitter handle if available
+        if header_details.get('twitter_handle'):
+            info += f"Twitter: @{header_details.get('twitter_handle')}\n"
+        
+        # Add year details if available
+        if hasattr(year_results, 'year_details'):
+            year_details = year_results.year_details
+            if year_details.get('Team'):
+                info += f"Current Team: {year_details.get('Team')}\n"
+            if year_details.get('Division'):
+                info += f"Division: {year_details.get('Division')}\n"
+            if year_details.get('UCI Ranking'):
+                info += f"UCI Ranking: {year_details.get('UCI Ranking')}\n"
+            if year_details.get('UCI Points'):
+                info += f"UCI Points: {year_details.get('UCI Points')}\n"
+            if year_details.get('UCI Wins'):
+                info += f"Wins: {year_details.get('UCI Wins')}\n"
         
         # Add recent results if available
-        if results:
-            info += "Recent Results:\n"
-            for i, result in enumerate(results[:5], 1):  # Show only the first 5 results
-                info += f"{i}. {result.get('date', 'N/A')} - {result.get('race', 'N/A')}: {result.get('result', 'N/A')}\n"
+        if hasattr(year_results, 'results_df') and not year_results.results_df.empty:
+            info += "\nRecent Results:\n"
+            for i, (_, row) in enumerate(year_results.results_df.iterrows(), 1):
+                if i > 5:  # Show only the first 5 results
+                    break
+                date = row.get('Date', 'N/A')
+                race = row.get('Race', 'N/A')
+                pos = row.get('Pos', 'N/A')
+                info += f"{i}. {date} - {race}: {pos}\n"
         
         return info
     except Exception as e:
@@ -56,32 +82,45 @@ async def get_race_results(race_id: int, year: int) -> str:
     """
     try:
         # Create a race edition instance and fetch results
-        race = RaceEdition(race_id, year)
-        race_info = race.get_info()
-        results = race.get_results()
+        race_edition = RaceEdition(race_id, year)
+        race_results = race_edition.results()
         
         # Format race information
-        info = f"Race: {race_info.get('name', 'N/A')} {year}\n"
-        info += f"Date: {race_info.get('date_start', 'N/A')} to {race_info.get('date_end', 'N/A')}\n"
-        info += f"Category: {race_info.get('category', 'N/A')}\n"
-        info += f"Country: {race_info.get('country', 'N/A')}\n\n"
+        info = f"Race: Race ID {race_id} - {year}\n"
+        
+        # Try to get race name from results table if available
+        if hasattr(race_results, 'race_name'):
+            info = f"Race: {race_results.race_name} {year}\n"
+        
+        # Add race details if available
+        if hasattr(race_results, 'race_details'):
+            race_details = race_results.race_details
+            if 'Date' in race_details:
+                info += f"Date: {race_details['Date']}\n"
+            if 'Category' in race_details:
+                info += f"Category: {race_details['Category']}\n"
+            if 'Country' in race_details:
+                info += f"Country: {race_details['Country']}\n"
+                
+        info += "\n"
         
         # Add general classification results if available
-        if results:
+        if hasattr(race_results, 'results_table') and not race_results.results_table.empty:
             info += "General Classification:\n"
             
-            # Sort results by position if available
-            if results and isinstance(results, list):
-                results_to_show = sorted(
-                    [r for r in results if r.get('position')], 
-                    key=lambda x: int(x.get('position', '999')) if x.get('position', '').isdigit() else 999
-                )[:10]  # Show only top 10
+            # Get top 10 results
+            results_df = race_results.results_table.head(10)
+            
+            for _, row in results_df.iterrows():
+                pos = row.get('Pos', 'N/A')
+                rider = row.get('Rider', 'N/A')
+                team = row.get('Team', 'N/A')
+                time = row.get('Time', '')
                 
-                for result in results_to_show:
-                    info += f"{result.get('position', 'N/A')}. {result.get('rider_name', 'N/A')} ({result.get('team', 'N/A')})"
-                    if result.get('time'):
-                        info += f" - {result.get('time')}"
-                    info += "\n"
+                info += f"{pos}. {rider} ({team})"
+                if time:
+                    info += f" - {time}"
+                info += "\n"
         
         return info
     except Exception as e:
