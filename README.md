@@ -108,3 +108,41 @@ Once connected to Claude, you can ask:
 ## License
 
 MIT
+
+## MCP Integration
+
+This API is now integrated with the Model Context Protocol (MCP), allowing AI assistants like Claude to directly access cycling data. The MCP server exposes tools for querying race information and results from firstcycling.com.
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `search_race` | Find races by name with optional year and category filters |
+| `get_race_details` | Get comprehensive information about a specific race |
+| `get_race_results` | Retrieve results for a race edition |
+| `get_race_startlist` | Get the startlist for a race edition |
+
+### Natural Language Queries
+
+Users can interact with the FirstCycling API through natural language. Here are some example queries:
+
+- "Who won the Tour de France in 2023?"
+- "Show me the results of Paris-Roubaix 2022"
+- "When is the next edition of Milan-San Remo?"
+- "What was the podium at the Giro d'Italia last year?"
+- "Show me the startlist for the upcoming Tour of Flanders"
+- "Who has won the most stages in the Vuelta a España?"
+- "Compare the routes of the Tour de France between 2022 and 2023"
+- "Find WorldTour races happening in May this year"
+
+The MCP server automatically identifies the appropriate tool to use and parameters to pass based on your question.
+
+### Getting Started with MCP
+
+To use the MCP server with Claude Desktop:
+
+1. Ensure you have the latest version of [Claude Desktop](https://claude.ai/download) installed
+2. Add this MCP server to your Claude Desktop configuration
+3. Start asking questions about cycling races and results
+
+For developers looking to integrate with this MCP server, see our [developer documentation](./docs/mcp-integration.md).
