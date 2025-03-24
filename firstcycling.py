@@ -21,6 +21,56 @@ from first_cycling_api.race.race import RaceEdition
 mcp = FastMCP("firstcycling")
 
 @mcp.tool(
+    description="""Search for professional cyclists by name. This tool helps find riders by their name, 
+    returning a list of matching riders with their IDs and basic information. This is useful when you need 
+    a rider's ID for other operations but only know their name.
+    
+    Example usage:
+    - Search for "Tadej Pogacar" to find Tadej Pogačar's ID
+    - Search for "Van Aert" to find Wout van Aert's ID
+    
+    Returns a formatted string with:
+    - List of matching riders
+    - Each rider's ID, name, nationality, and current team
+    - Number of matches found"""
+)
+async def search_rider(query: str) -> str:
+    """Search for riders by name.
+
+    Args:
+        query (str): The search query string to find riders by name.
+
+    Returns:
+        str: A formatted string containing matching riders with their details:
+             - Rider ID
+             - Rider name
+             - Nationality
+             - Current team
+    """
+    try:
+        # Search for riders using the Rider.search method
+        riders = Rider.search(query)
+        
+        if not riders:
+            return f"No riders found matching the query '{query}'."
+        
+        # Build results string
+        info = f"Found {len(riders)} riders matching '{query}':\n\n"
+        
+        for rider in riders:
+            info += f"ID: {rider['id']}\n"
+            info += f"Name: {rider['name']}\n"
+            if rider.get('nationality'):
+                info += f"Nationality: {rider['nationality'].upper()}\n"
+            if rider.get('team'):
+                info += f"Team: {rider['team']}\n"
+            info += "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error searching for riders: {str(e)}"
+
+@mcp.tool(
     description="""Get comprehensive information about a professional cyclist including their current team, nationality, date of birth, and recent race results. 
     This tool provides a detailed overview of a rider's current status and recent performance in professional cycling races. 
     The information includes their current team affiliation, nationality, age, and their most recent race results with positions and times.
