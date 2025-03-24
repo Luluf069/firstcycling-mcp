@@ -43,28 +43,6 @@ This MCP server offers rich access to professional cycling data, providing tools
 
 This server uses the [FirstCycling API](https://github.com/Lsdefine/first-cycling-api), which has been integrated directly into the project. The API provides methods to fetch data from the FirstCycling website through web scraping.
 
-### Common FirstCycling IDs
-
-#### Riders
-
-- Tadej Pogačar: 16973
-- Jonas Vingegaard: 21527
-- Remco Evenepoel: 23697
-- Primož Roglič: 18655
-- Mathieu van der Poel: 16672
-- Wout van Aert: 19077
-
-#### Races
-
-- Tour de France: 17
-- Giro d'Italia: 13
-- Vuelta a España: 23
-- Paris-Roubaix: 30
-- Tour of Flanders: 29
-- Milan-San Remo: 4
-- Liège-Bastogne-Liège: 11
-- Il Lombardia: 10
-
 ## MCP Tools
 
 The server exposes the following tools through the Model Context Protocol:
@@ -152,11 +130,11 @@ With this MCP server, you can use Claude to:
 
 ### Race Research
 
-- **Recent Results**: "Show me the results of the 2023 Paris-Roubaix (race ID 30)."
-- **Historical Context**: "Who are the youngest and oldest winners of the Tour of Flanders (ID 29)?"
-- **Team Analysis**: "Get the startlist for the 2023 Tour de France (race ID 17) with detailed team information."
-- **Race Statistics**: "Show me the victory table for Liège-Bastogne-Liège (ID 11). Who has won it the most times?"
-- **Stage Information**: "Can you show me the stage profiles for the 2023 Giro d'Italia (race ID 13)?"
+- **Recent Results**: "Show me the results of the 2023 Paris-Roubaix."
+- **Historical Context**: "Who are the youngest and oldest winners of the Tour of Flanders?"
+- **Team Analysis**: "Get the startlist for the 2023 Tour de France with detailed team information."
+- **Race Statistics**: "Show me the victory table for Liège-Bastogne-Liège. Who has won it the most times?"
+- **Stage Information**: "Can you show me the stage profiles for the 2023 Giro d'Italia?"
 
 ### Sports Journalism
 
