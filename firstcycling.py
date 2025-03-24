@@ -635,6 +635,493 @@ async def get_race_results(race_id: int, year: int) -> str:
     except Exception as e:
         return f"Error retrieving race results: {str(e)}"
 
+@mcp.tool()
+async def get_race_overview(race_id: int) -> str:
+    """Get comprehensive overview information about a specific race.
+
+    This tool retrieves general information about a race, including its classifications,
+    history, and key details. It provides a high-level overview of the race's characteristics
+    and structure.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get race overview
+        overview = race.overview()
+        
+        # Build information string
+        info = ""
+        
+        # Add race name if available
+        if hasattr(overview, 'race_name'):
+            info += f"Race: {overview.race_name}\n\n"
+        
+        # Add race details if available
+        if hasattr(overview, 'race_details'):
+            race_details = overview.race_details
+            if 'Date' in race_details:
+                info += f"Date: {race_details['Date']}\n"
+            if 'Category' in race_details:
+                info += f"Category: {race_details['Category']}\n"
+            if 'Country' in race_details:
+                info += f"Country: {race_details['Country']}\n"
+            if 'Distance' in race_details:
+                info += f"Distance: {race_details['Distance']}\n"
+            if 'Stages' in race_details:
+                info += f"Number of Stages: {race_details['Stages']}\n"
+        
+        # Add classifications if available
+        if hasattr(overview, 'classifications'):
+            info += "\nClassifications:\n"
+            for classification in overview.classifications:
+                info += f"- {classification}\n"
+        
+        # Add victory table if available
+        try:
+            victory_table = race.victory_table()
+            if hasattr(victory_table, 'results_table') and not victory_table.results_table.empty:
+                info += "\nMost Successful Riders:\n"
+                # Get top 5 riders
+                results_df = victory_table.results_table.head(5)
+                for _, row in results_df.iterrows():
+                    rider = row.get('Rider', 'N/A')
+                    wins = row.get('Wins', 'N/A')
+                    info += f"- {rider}: {wins} wins\n"
+        except:
+            pass
+        
+        # Add youngest/oldest winners if available
+        try:
+            age_stats = race.youngest_oldest_winners()
+            if hasattr(age_stats, 'results_table') and not age_stats.results_table.empty:
+                info += "\nAge Records:\n"
+                results_df = age_stats.results_table
+                if 'Youngest' in results_df.columns:
+                    info += f"Youngest Winner: {results_df['Youngest'].iloc[0]}\n"
+                if 'Oldest' in results_df.columns:
+                    info += f"Oldest Winner: {results_df['Oldest'].iloc[0]}\n"
+        except:
+            pass
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving race overview: {str(e)}"
+
+@mcp.tool()
+async def get_race_stage_profiles(race_id: int, year: int) -> str:
+    """Get detailed stage profiles for a specific race edition.
+
+    This tool retrieves information about each stage of a race, including distances,
+    elevation profiles, and key details about the route. It provides a comprehensive
+    overview of the race's structure and challenges.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+        year: The year of the race edition (e.g., 2023)
+    """
+    try:
+        # Create a race edition instance
+        race_edition = RaceEdition(race_id, year)
+        
+        # Get stage profiles
+        stage_profiles = race_edition.stage_profiles()
+        
+        # Build information string
+        info = ""
+        
+        # Add race name if available
+        if hasattr(stage_profiles, 'race_name'):
+            info += f"Race: {stage_profiles.race_name} {year}\n\n"
+        
+        # Add stage information if available
+        if hasattr(stage_profiles, 'stages'):
+            for stage in stage_profiles.stages:
+                info += f"Stage {stage.get('number', 'N/A')}:\n"
+                
+                # Add stage details
+                if 'date' in stage:
+                    info += f"Date: {stage['date']}\n"
+                if 'start' in stage:
+                    info += f"Start: {stage['start']}\n"
+                if 'finish' in stage:
+                    info += f"Finish: {stage['finish']}\n"
+                if 'distance' in stage:
+                    info += f"Distance: {stage['distance']}\n"
+                if 'type' in stage:
+                    info += f"Type: {stage['type']}\n"
+                
+                # Add elevation information if available
+                if 'elevation' in stage:
+                    elevation = stage['elevation']
+                    if 'start' in elevation:
+                        info += f"Start Elevation: {elevation['start']}m\n"
+                    if 'finish' in elevation:
+                        info += f"Finish Elevation: {elevation['finish']}m\n"
+                    if 'highest' in elevation:
+                        info += f"Highest Point: {elevation['highest']}m\n"
+                    if 'lowest' in elevation:
+                        info += f"Lowest Point: {elevation['lowest']}m\n"
+                    if 'climbing' in elevation:
+                        info += f"Total Climbing: {elevation['climbing']}m\n"
+                
+                # Add key climbs if available
+                if 'climbs' in stage and stage['climbs']:
+                    info += "\nKey Climbs:\n"
+                    for climb in stage['climbs']:
+                        info += f"- {climb.get('name', 'N/A')}"
+                        if 'category' in climb:
+                            info += f" (Category {climb['category']})"
+                        if 'distance' in climb:
+                            info += f" - {climb['distance']}km"
+                        if 'elevation' in climb:
+                            info += f" - {climb['elevation']}m"
+                        info += "\n"
+                
+                info += "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving stage profiles: {str(e)}"
+
+@mcp.tool()
+async def get_race_startlist(race_id: int, year: int, extended: bool = False) -> str:
+    """Get the startlist for a specific race edition.
+
+    This tool retrieves the list of riders and teams participating in a race.
+    It can provide either a basic startlist or an extended version with additional details.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+        year: The year of the race edition (e.g., 2023)
+        extended: Whether to get the extended startlist with additional details (default: False)
+    """
+    try:
+        # Create a race edition instance
+        race_edition = RaceEdition(race_id, year)
+        
+        # Get startlist (normal or extended)
+        startlist = race_edition.startlist_extended() if extended else race_edition.startlist()
+        
+        # Build information string
+        info = ""
+        
+        # Add race name if available
+        if hasattr(startlist, 'race_name'):
+            info += f"Race: {startlist.race_name} {year}\n\n"
+        
+        # Add startlist information if available
+        if hasattr(startlist, 'startlist'):
+            # Group riders by team
+            teams = {}
+            for rider in startlist.startlist:
+                team = rider.get('team', 'Unknown Team')
+                if team not in teams:
+                    teams[team] = []
+                teams[team].append(rider)
+            
+            # Format output by team
+            for team, riders in teams.items():
+                info += f"\n{team}:\n"
+                for rider in riders:
+                    info += f"- {rider.get('name', 'N/A')}"
+                    if extended:
+                        if 'nationality' in rider:
+                            info += f" ({rider['nationality']})"
+                        if 'age' in rider:
+                            info += f" - Age: {rider['age']}"
+                        if 'uci_rank' in rider:
+                            info += f" - UCI Rank: {rider['uci_rank']}"
+                    info += "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving startlist: {str(e)}"
+
+@mcp.tool()
+async def get_rider_victories(rider_id: int, world_tour: bool = False, uci: bool = False) -> str:
+    """Get the victories achieved by a professional cyclist.
+
+    This tool retrieves all victories or filtered victories (World Tour or UCI races only) for a rider.
+    It provides details such as the race name, date, and race category.
+
+    Args:
+        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
+        world_tour: If True, only return World Tour victories (default: False)
+        uci: If True, only return UCI victories (default: False)
+    """
+    try:
+        # Create a rider instance
+        rider = Rider(rider_id)
+        
+        # Get victories with optional filters
+        victories = rider.victories(world_tour=world_tour, uci=uci)
+        
+        # Check if results exist
+        if victories is None or not hasattr(victories, 'results_df') or victories.results_df.empty:
+            return f"No victories found for rider ID {rider_id}. This rider ID may not exist."
+        
+        # Build results information string
+        info = ""
+        
+        # Add rider name if available from header details
+        if hasattr(victories, 'header_details') and victories.header_details and 'name' in victories.header_details:
+            info += f"Victories for {victories.header_details['name']}:\n\n"
+        else:
+            info += f"Victories for Rider ID {rider_id}:\n\n"
+        
+        # Add filter information if applicable
+        if world_tour:
+            info += "(World Tour races only)\n"
+        elif uci:
+            info += "(UCI races only)\n"
+        info += "\n"
+        
+        # Get all victories
+        results_df = victories.results_df
+        
+        # Sort by date (most recent first)
+        results_df = results_df.sort_values('Date', ascending=False)
+        
+        for _, row in results_df.iterrows():
+            date = row.get('Date', 'N/A')
+            race = row.get('Race', 'N/A')
+            category = row.get('CAT', 'N/A')
+            country = row.get('Race_Country', 'N/A')
+            
+            result_line = f"{race} ({category})"
+            if date != 'N/A':
+                result_line += f" - {date}"
+            if country != 'N/A':
+                result_line += f" - {country}"
+            info += result_line + "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving victories for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
+
+@mcp.tool()
+async def get_race_victory_table(race_id: int) -> str:
+    """Get the all-time victory table for a race.
+
+    This tool retrieves a comprehensive list of all winners of a race throughout its history,
+    including details such as the year, winner's name, and team.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 6 for Tour of the Basque Country)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get victory table
+        victory_table = race.victory_table()
+        
+        # Check if results exist
+        if victory_table is None or not hasattr(victory_table, 'results_df') or victory_table.results_df.empty:
+            return f"No victory table found for race ID {race_id}. This race ID may not exist."
+        
+        # Build results information string
+        info = ""
+        
+        # Add race name if available from header details
+        if hasattr(victory_table, 'header_details') and victory_table.header_details and 'name' in victory_table.header_details:
+            info += f"Victory Table for {victory_table.header_details['name']}:\n\n"
+        else:
+            info += f"Victory Table for Race ID {race_id}:\n\n"
+        
+        # Get all victories
+        results_df = victory_table.results_df
+        
+        # Sort by year (most recent first)
+        results_df = results_df.sort_values('Year', ascending=False)
+        
+        for _, row in results_df.iterrows():
+            year = row.get('Year', 'N/A')
+            rider = row.get('Rider', 'N/A')
+            team = row.get('Team', 'N/A')
+            country = row.get('Rider_Country', 'N/A')
+            
+            result_line = f"{year}: {rider}"
+            if team != 'N/A':
+                result_line += f" ({team})"
+            if country != 'N/A':
+                result_line += f" - {country}"
+            info += result_line + "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving victory table for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
+
+@mcp.tool()
+async def get_race_year_by_year(race_id: int, classification_num: int = None) -> str:
+    """Get year-by-year statistics for a race.
+
+    This tool retrieves comprehensive statistics for a race across all years, optionally filtered
+    by a specific classification (e.g., general classification, points classification, etc.).
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 6 for Tour of the Basque Country)
+        classification_num: Classification number to filter results (optional)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get year-by-year statistics
+        year_stats = race.year_by_year(classification_num)
+        
+        # Check if results exist
+        if year_stats is None or not hasattr(year_stats, 'results_df') or year_stats.results_df.empty:
+            return f"No year-by-year statistics found for race ID {race_id}. This race ID may not exist."
+        
+        # Build results information string
+        info = ""
+        
+        # Add race name if available from header details
+        if hasattr(year_stats, 'header_details') and year_stats.header_details and 'name' in year_stats.header_details:
+            info += f"Year-by-Year Statistics for {year_stats.header_details['name']}:\n\n"
+        else:
+            info += f"Year-by-Year Statistics for Race ID {race_id}:\n\n"
+        
+        # Get all statistics
+        results_df = year_stats.results_df
+        
+        # Sort by year (most recent first)
+        results_df = results_df.sort_values('Year', ascending=False)
+        
+        for _, row in results_df.iterrows():
+            year = row.get('Year', 'N/A')
+            rider = row.get('Rider', 'N/A')
+            team = row.get('Team', 'N/A')
+            country = row.get('Rider_Country', 'N/A')
+            
+            result_line = f"{year}: {rider}"
+            if team != 'N/A':
+                result_line += f" ({team})"
+            if country != 'N/A':
+                result_line += f" - {country}"
+            info += result_line + "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving year-by-year statistics for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
+
+@mcp.tool()
+async def get_race_youngest_oldest_winners(race_id: int) -> str:
+    """Get the youngest and oldest winners of a race.
+
+    This tool retrieves information about the youngest and oldest riders to have won a race,
+    including their age at the time of victory and other relevant details.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 6 for Tour of the Basque Country)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get youngest and oldest winners
+        winners = race.youngest_oldest_winners()
+        
+        # Check if results exist
+        if winners is None or not hasattr(winners, 'results_df') or winners.results_df.empty:
+            return f"No winner information found for race ID {race_id}. This race ID may not exist."
+        
+        # Build results information string
+        info = ""
+        
+        # Add race name if available from header details
+        if hasattr(winners, 'header_details') and winners.header_details and 'name' in winners.header_details:
+            info += f"Youngest and Oldest Winners for {winners.header_details['name']}:\n\n"
+        else:
+            info += f"Youngest and Oldest Winners for Race ID {race_id}:\n\n"
+        
+        # Get all winners
+        results_df = winners.results_df
+        
+        # Sort by age
+        results_df = results_df.sort_values('Age')
+        
+        # Get youngest winner
+        youngest = results_df.iloc[0]
+        info += "Youngest Winner:\n"
+        info += f"Year: {youngest.get('Year', 'N/A')}\n"
+        info += f"Rider: {youngest.get('Rider', 'N/A')}\n"
+        info += f"Age: {youngest.get('Age', 'N/A')}\n"
+        info += f"Team: {youngest.get('Team', 'N/A')}\n"
+        info += f"Country: {youngest.get('Rider_Country', 'N/A')}\n\n"
+        
+        # Get oldest winner
+        oldest = results_df.iloc[-1]
+        info += "Oldest Winner:\n"
+        info += f"Year: {oldest.get('Year', 'N/A')}\n"
+        info += f"Rider: {oldest.get('Rider', 'N/A')}\n"
+        info += f"Age: {oldest.get('Age', 'N/A')}\n"
+        info += f"Team: {oldest.get('Team', 'N/A')}\n"
+        info += f"Country: {oldest.get('Rider_Country', 'N/A')}\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving youngest and oldest winners for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
+
+@mcp.tool()
+async def get_race_stage_victories(race_id: int) -> str:
+    """Get the all-time stage victories for a race.
+
+    This tool retrieves a comprehensive list of all stage winners in a race's history,
+    including details such as the year, stage number, winner's name, and team.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 6 for Tour of the Basque Country)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get stage victories
+        stage_victories = race.stage_victories()
+        
+        # Check if results exist
+        if stage_victories is None or not hasattr(stage_victories, 'results_df') or stage_victories.results_df.empty:
+            return f"No stage victories found for race ID {race_id}. This race ID may not exist."
+        
+        # Build results information string
+        info = ""
+        
+        # Add race name if available from header details
+        if hasattr(stage_victories, 'header_details') and stage_victories.header_details and 'name' in stage_victories.header_details:
+            info += f"Stage Victories for {stage_victories.header_details['name']}:\n\n"
+        else:
+            info += f"Stage Victories for Race ID {race_id}:\n\n"
+        
+        # Get all stage victories
+        results_df = stage_victories.results_df
+        
+        # Sort by year and stage number (most recent first)
+        results_df = results_df.sort_values(['Year', 'Stage'], ascending=[False, True])
+        
+        for _, row in results_df.iterrows():
+            year = row.get('Year', 'N/A')
+            stage = row.get('Stage', 'N/A')
+            rider = row.get('Rider', 'N/A')
+            team = row.get('Team', 'N/A')
+            country = row.get('Rider_Country', 'N/A')
+            
+            result_line = f"{year} Stage {stage}: {rider}"
+            if team != 'N/A':
+                result_line += f" ({team})"
+            if country != 'N/A':
+                result_line += f" - {country}"
+            info += result_line + "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving stage victories for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
+
 if __name__ == "__main__":
     # Initialize and run the server
     mcp.run(transport='stdio') 
