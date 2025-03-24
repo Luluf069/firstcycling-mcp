@@ -763,10 +763,6 @@ async def get_rider_teams(rider_id: int) -> str:
         # Get team information
         teams = rider.teams()
         
-        # Check if results exist
-        if teams is None or not hasattr(teams, 'results_df') or teams.results_df.empty:
-            return f"No team information found for rider ID {rider_id}. This rider ID may not exist."
-        
         # Build information string
         info = ""
         
@@ -776,7 +772,82 @@ async def get_rider_teams(rider_id: int) -> str:
         else:
             info += f"Team History for Rider ID {rider_id}:\n\n"
         
-        # Get results
+        # Direct HTML parsing for teams data if results_df is not available
+        if not hasattr(teams, 'results_df') or teams.results_df is None or teams.results_df.empty:
+            # Parse teams data directly from HTML
+            soup = teams.soup
+            if soup is None:
+                return f"No team information found for rider ID {rider_id}. This rider ID may not exist."
+            
+            # Find the teams table - it's typically in a div with class "content"
+            # and contains a table with team information
+            content_div = soup.find('div', class_='content')
+            if content_div is None:
+                return f"Could not find team information for rider ID {rider_id}."
+            
+            # Look for table with team data
+            tables = content_div.find_all('table')
+            if not tables:
+                return f"No team data found for rider ID {rider_id}."
+            
+            # Find the teams table - usually a table with "Teams" or "Team" in a header
+            teams_table = None
+            for table in tables:
+                headers = table.find_all('th')
+                for header in headers:
+                    if 'Team' in header.text:
+                        teams_table = table
+                        break
+                if teams_table:
+                    break
+            
+            if teams_table is None:
+                # Try a different approach - look for tables that might contain team info
+                # without relying on headers
+                for table in tables:
+                    rows = table.find_all('tr')
+                    if len(rows) > 1:  # At least header + one data row
+                        teams_table = table
+                        break
+            
+            if teams_table:
+                # Extract team data
+                rows = teams_table.find_all('tr')
+                team_data = []
+                
+                # Skip header row
+                for row in rows[1:]:
+                    cells = row.find_all('td')
+                    if len(cells) >= 2:  # Expecting at least year and team name
+                        year = cells[0].text.strip()
+                        team = cells[1].text.strip()
+                        if year and team:
+                            team_data.append({'Year': year, 'Team': team})
+                
+                # Group by team
+                teams_dict = {}
+                for item in team_data:
+                    team = item['Team']
+                    year = item['Year']
+                    if team not in teams_dict:
+                        teams_dict[team] = []
+                    teams_dict[team].append(year)
+                
+                # Format team information
+                for team, years in teams_dict.items():
+                    info += f"{team}:\n"
+                    sorted_years = sorted(years, reverse=True)
+                    if len(sorted_years) == 1:
+                        info += f"  {sorted_years[0]}\n"
+                    else:
+                        info += f"  {sorted_years[-1]}-{sorted_years[0]}\n"
+                    info += "\n"
+                
+                return info
+            else:
+                return f"Could not find team data table for rider ID {rider_id}."
+        
+        # Get results from the DataFrame if available
         results_df = teams.results_df
         
         # Sort by year (most recent first)
