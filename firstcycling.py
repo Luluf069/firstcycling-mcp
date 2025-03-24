@@ -13,12 +13,39 @@ from first_cycling_api.race.race import RaceEdition
 # Initialize FastMCP server
 mcp = FastMCP("firstcycling")
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get comprehensive information about a professional cyclist including their current team, nationality, date of birth, and recent race results. 
+    This tool provides a detailed overview of a rider's current status and recent performance in professional cycling races. 
+    The information includes their current team affiliation, nationality, age, and their most recent race results with positions and times.
+    
+    Example usage:
+    - Get basic info for Tadej Pogačar (ID: 16973)
+    - Get basic info for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Full name and current team
+    - Nationality and date of birth
+    - UCI ID and social media handles
+    - Last 5 race results with positions and times
+    - Total number of UCI victories"""
+)
 async def get_rider_info(rider_id: int) -> str:
-    """Get information about a professional cyclist.
+    """Get basic information about a rider.
 
     Args:
-        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
+        rider_id (int): The unique identifier for the rider. This ID can be found on FirstCycling.com
+                       in the rider's profile URL (e.g., for rider 12345, the URL would be firstcycling.com/rider/12345).
+
+    Returns:
+        str: A formatted string containing the rider's information including:
+             - Full name
+             - Current team (if available)
+             - Nationality
+             - Date of birth
+             - Recent race results (last 5 races) with positions and times
+
+    Raises:
+        Exception: If the rider is not found or if there are connection issues.
     """
     try:
         # Create a rider instance
@@ -84,16 +111,43 @@ async def get_rider_info(rider_id: int) -> str:
     except Exception as e:
         return f"Error retrieving rider information for ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Retrieve the best career results of a professional cyclist, including their top finishes in various races. 
+    This tool provides a comprehensive overview of a rider's most significant achievements throughout their career, 
+    including their highest positions in major races, stage wins, and overall classifications. 
+    Results are sorted by importance and include detailed information about each race.
+    
+    Example usage:
+    - Get top 10 best results for Tadej Pogačar (ID: 16973)
+    - Get top 5 best results for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Rider's name and career highlights
+    - Top results sorted by importance
+    - Race details including category and country
+    - Date and position for each result"""
+)
 async def get_rider_best_results(rider_id: int, limit: int = 10) -> str:
-    """Get the best results achieved by a professional cyclist throughout their career.
-
-    This tool retrieves the rider's top performances across all races, sorted by position.
-    It includes details such as the race name, date, position, and race category.
+    """Get the best results of a rider throughout their career.
 
     Args:
-        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
-        limit: Maximum number of results to return (default: 10)
+        rider_id (int): The unique identifier for the rider. This ID can be found on FirstCycling.com
+                       in the rider's profile URL (e.g., for rider 12345, the URL would be firstcycling.com/rider/12345).
+        limit (int, optional): The maximum number of results to return. Defaults to 10.
+                             This parameter helps control the amount of data returned and can be adjusted
+                             based on the level of detail needed. Maximum recommended value is 20.
+
+    Returns:
+        str: A formatted string containing the rider's best results, including:
+             - Race name and edition
+             - Date of the race
+             - Position achieved
+             - Time or gap to winner (if applicable)
+             - Race category and type
+             - Any special achievements (e.g., stage wins, points classification)
+
+    Raises:
+        Exception: If the rider is not found or if there are connection issues.
     """
     try:
         # Create a rider instance
@@ -136,15 +190,42 @@ async def get_rider_best_results(rider_id: int, limit: int = 10) -> str:
     except Exception as e:
         return f"Error retrieving best results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get comprehensive results for a rider in Grand Tours (Tour de France, Giro d'Italia, and Vuelta a España). 
+    This tool provides detailed information about a rider's performance in cycling's most prestigious three-week races, 
+    including their overall classification positions, stage wins, and special classification results. 
+    The data is organized chronologically and includes all relevant race details.
+    
+    Example usage:
+    - Get Grand Tour results for Tadej Pogačar (ID: 16973)
+    - Get Grand Tour results for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Results for each Grand Tour (Tour de France, Giro, Vuelta)
+    - Overall classification positions
+    - Stage wins and special classification results
+    - Time gaps and race details"""
+)
 async def get_rider_grand_tour_results(rider_id: int) -> str:
-    """Get the results of a professional cyclist in Grand Tours (Tour de France, Giro d'Italia, Vuelta a España).
-
-    This tool retrieves the rider's performances in all three Grand Tours, including their best positions
-    and stage results. It provides a comprehensive overview of their Grand Tour achievements.
+    """Get results for a rider in Grand Tours.
 
     Args:
-        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
+        rider_id (int): The unique identifier for the rider. This ID can be found on FirstCycling.com
+                       in the rider's profile URL (e.g., for rider 12345, the URL would be firstcycling.com/rider/12345).
+
+    Returns:
+        str: A formatted string containing the rider's Grand Tour results, including:
+             - Race name and year
+             - Overall classification position
+             - Time or gap to winner
+             - Stage wins (if any)
+             - Points classification results
+             - Mountains classification results
+             - Young rider classification results (if applicable)
+             - Team classification results
+
+    Raises:
+        Exception: If the rider is not found or if there are connection issues.
     """
     try:
         # Create a rider instance
@@ -193,16 +274,40 @@ async def get_rider_grand_tour_results(rider_id: int) -> str:
     except Exception as e:
         return f"Error retrieving Grand Tour results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Retrieve detailed results for a rider in cycling's five Monument races (Milan-San Remo, Tour of Flanders, 
+    Paris-Roubaix, Liège-Bastogne-Liège, and Il Lombardia). These are the most prestigious one-day races in professional cycling. 
+    The tool provides comprehensive information about a rider's performance in these historic races, including their positions, 
+    times, and any special achievements.
+    
+    Example usage:
+    - Get Monument results for Tadej Pogačar (ID: 16973)
+    - Get Monument results for Mathieu van der Poel (ID: 16975)
+    
+    Returns a formatted string with:
+    - Results for each Monument race
+    - Position and time for each participation
+    - Race details and special achievements
+    - Chronological organization by year"""
+)
 async def get_rider_monument_results(rider_id: int) -> str:
-    """Get the results of a professional cyclist in cycling's five Monuments (Milan-San Remo, Tour of Flanders,
-    Paris-Roubaix, Liège-Bastogne-Liège, and Giro di Lombardia).
-
-    This tool retrieves the rider's performances in all five Monument races, including their positions
-    and times. It provides a comprehensive overview of their achievements in cycling's most prestigious one-day races.
+    """Get results for a rider in the five Monument races.
 
     Args:
-        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
+        rider_id (int): The unique identifier for the rider. This ID can be found on FirstCycling.com
+                       in the rider's profile URL (e.g., for rider 12345, the URL would be firstcycling.com/rider/12345).
+
+    Returns:
+        str: A formatted string containing the rider's Monument race results, including:
+             - Race name and year
+             - Position achieved
+             - Time or gap to winner
+             - Race distance
+             - Any special achievements or notable moments
+             - Team performance
+
+    Raises:
+        Exception: If the rider is not found or if there are connection issues.
     """
     try:
         # Create a rider instance
@@ -251,7 +356,21 @@ async def get_rider_monument_results(rider_id: int) -> str:
     except Exception as e:
         return f"Error retrieving Monument results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get information about a professional cyclist's team affiliations and UCI rankings throughout their career.
+    This tool retrieves the rider's team history and their UCI ranking points over time. It provides a comprehensive
+    overview of their professional career progression through different teams and their performance in the UCI rankings.
+    
+    Example usage:
+    - Get team and ranking history for Tadej Pogačar (ID: 16973)
+    - Get team and ranking history for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Complete team history with years
+    - UCI ranking positions and points
+    - Career progression timeline
+    - Current team and ranking status"""
+)
 async def get_rider_team_and_ranking(rider_id: int) -> str:
     """Get information about a professional cyclist's team affiliations and UCI rankings throughout their career.
 
@@ -314,7 +433,21 @@ async def get_rider_team_and_ranking(rider_id: int) -> str:
     except Exception as e:
         return f"Error retrieving team and ranking information for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the complete race history of a professional cyclist, optionally filtered by year.
+    This tool retrieves a comprehensive list of all races the rider has participated in, including their
+    positions, times, and race categories. It provides a detailed overview of their racing career.
+    
+    Example usage:
+    - Get complete race history for Tadej Pogačar (ID: 16973)
+    - Get 2023 race history for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - All races organized by year
+    - Position and time for each race
+    - Race category and details
+    - Chronological organization"""
+)
 async def get_rider_race_history(rider_id: int, year: int = None) -> str:
     """Get the complete race history of a professional cyclist, optionally filtered by year.
 
@@ -384,7 +517,22 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
     except Exception as e:
         return f"Error retrieving race history for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the results of a professional cyclist in one-day races, optionally filtered by year.
+    This tool retrieves a comprehensive list of all one-day races the rider has participated in, including
+    their positions, times, and race categories. It provides a detailed overview of their performance in
+    one-day events.
+    
+    Example usage:
+    - Get all one-day race results for Tadej Pogačar (ID: 16973)
+    - Get 2023 one-day race results for Mathieu van der Poel (ID: 16975)
+    
+    Returns a formatted string with:
+    - One-day race results organized by year
+    - Position and time for each race
+    - Race category and details
+    - Chronological organization"""
+)
 async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
     """Get the results of a professional cyclist in one-day races, optionally filtered by year.
 
@@ -455,7 +603,22 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
     except Exception as e:
         return f"Error retrieving one-day race results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the results of a professional cyclist in stage races, optionally filtered by year.
+    This tool retrieves a comprehensive list of all stage races the rider has participated in, including
+    their positions, times, and race categories. It provides a detailed overview of their performance in
+    multi-day events.
+    
+    Example usage:
+    - Get all stage race results for Tadej Pogačar (ID: 16973)
+    - Get 2023 stage race results for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Stage race results organized by year
+    - Position and time for each race
+    - Race category and details
+    - Chronological organization"""
+)
 async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
     """Get the results of a professional cyclist in stage races, optionally filtered by year.
 
@@ -526,7 +689,22 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
     except Exception as e:
         return f"Error retrieving stage race results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get information about all teams a professional cyclist has ridden for throughout their career.
+    This tool retrieves a comprehensive list of all teams the rider has been a member of, including
+    the years they were with each team. It provides a detailed overview of their professional career
+    progression through different teams.
+    
+    Example usage:
+    - Get team history for Tadej Pogačar (ID: 16973)
+    - Get team history for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Complete list of teams
+    - Years spent with each team
+    - Career timeline
+    - Current team status"""
+)
 async def get_rider_teams(rider_id: int) -> str:
     """Get information about all teams a professional cyclist has ridden for throughout their career.
 
@@ -581,7 +759,21 @@ async def get_rider_teams(rider_id: int) -> str:
     except Exception as e:
         return f"Error retrieving team information for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get results for a specific race in a given year.
+    This tool retrieves comprehensive information about a race edition, including the general classification,
+    race details, and key statistics. It provides a detailed overview of the race's outcome and structure.
+    
+    Example usage:
+    - Get 2023 Tour de France results (ID: 17, Year: 2023)
+    - Get 2023 Giro d'Italia results (ID: 18, Year: 2023)
+    
+    Returns a formatted string with:
+    - Race name and year
+    - Race details (date, category, country)
+    - General classification top 10
+    - Key race statistics"""
+)
 async def get_race_results(race_id: int, year: int) -> str:
     """Get results for a specific race in a given year.
 
@@ -635,7 +827,22 @@ async def get_race_results(race_id: int, year: int) -> str:
     except Exception as e:
         return f"Error retrieving race results: {str(e)}"
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get comprehensive overview information about a specific race.
+    This tool retrieves general information about a race, including its classifications,
+    history, and key details. It provides a high-level overview of the race's characteristics
+    and structure.
+    
+    Example usage:
+    - Get overview for Tour de France (ID: 17)
+    - Get overview for Giro d'Italia (ID: 18)
+    
+    Returns a formatted string with:
+    - Race name and basic details
+    - Race classifications
+    - Most successful riders
+    - Age records (youngest/oldest winners)"""
+)
 async def get_race_overview(race_id: int) -> str:
     """Get comprehensive overview information about a specific race.
 
@@ -711,7 +918,22 @@ async def get_race_overview(race_id: int) -> str:
     except Exception as e:
         return f"Error retrieving race overview: {str(e)}"
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get detailed stage profiles for a specific race edition.
+    This tool retrieves information about each stage of a race, including distances,
+    elevation profiles, and key details about the route. It provides a comprehensive
+    overview of the race's structure and challenges.
+    
+    Example usage:
+    - Get 2023 Tour de France stage profiles (ID: 17, Year: 2023)
+    - Get 2023 Giro d'Italia stage profiles (ID: 18, Year: 2023)
+    
+    Returns a formatted string with:
+    - Stage-by-stage details
+    - Distance and elevation profiles
+    - Key climbs and their categories
+    - Start and finish locations"""
+)
 async def get_race_stage_profiles(race_id: int, year: int) -> str:
     """Get detailed stage profiles for a specific race edition.
 
@@ -787,7 +1009,23 @@ async def get_race_stage_profiles(race_id: int, year: int) -> str:
     except Exception as e:
         return f"Error retrieving stage profiles: {str(e)}"
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the startlist for a specific race edition.
+    This tool retrieves the list of riders and teams participating in a race.
+    It can provide either a basic startlist or an extended version with additional details.
+    
+    Example usage:
+    - Get basic startlist for 2023 Tour de France (ID: 17, Year: 2023)
+    - Get extended startlist for 2023 Giro d'Italia (ID: 18, Year: 2023, extended=True)
+    
+    Returns a formatted string with:
+    - Race name and year
+    - Teams and their riders
+    - Extended information (if requested):
+      - Rider nationality
+      - Age
+      - UCI ranking"""
+)
 async def get_race_startlist(race_id: int, year: int, extended: bool = False) -> str:
     """Get the startlist for a specific race edition.
 
@@ -841,7 +1079,22 @@ async def get_race_startlist(race_id: int, year: int, extended: bool = False) ->
     except Exception as e:
         return f"Error retrieving startlist: {str(e)}"
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the victories achieved by a professional cyclist.
+    This tool retrieves all victories or filtered victories (World Tour or UCI races only) for a rider.
+    It provides details such as the race name, date, and race category.
+    
+    Example usage:
+    - Get all victories for Tadej Pogačar (ID: 16973)
+    - Get World Tour victories for Jonas Vingegaard (ID: 16974, world_tour=True)
+    - Get UCI victories for Mathieu van der Poel (ID: 16975, uci=True)
+    
+    Returns a formatted string with:
+    - List of victories organized by date
+    - Race details and category
+    - Country and date information
+    - Filtered results if specified"""
+)
 async def get_rider_victories(rider_id: int, world_tour: bool = False, uci: bool = False) -> str:
     """Get the victories achieved by a professional cyclist.
 
@@ -903,7 +1156,21 @@ async def get_rider_victories(rider_id: int, world_tour: bool = False, uci: bool
     except Exception as e:
         return f"Error retrieving victories for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the all-time victory table for a race.
+    This tool retrieves a comprehensive list of all winners of a race throughout its history,
+    including details such as the year, winner's name, and team.
+    
+    Example usage:
+    - Get victory table for Tour de France (ID: 17)
+    - Get victory table for Giro d'Italia (ID: 18)
+    
+    Returns a formatted string with:
+    - Complete list of winners
+    - Year and winner details
+    - Team and country information
+    - Chronological organization"""
+)
 async def get_race_victory_table(race_id: int) -> str:
     """Get the all-time victory table for a race.
 
@@ -956,7 +1223,21 @@ async def get_race_victory_table(race_id: int) -> str:
     except Exception as e:
         return f"Error retrieving victory table for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get year-by-year statistics for a race.
+    This tool retrieves comprehensive statistics for a race across all years, optionally filtered
+    by a specific classification (e.g., general classification, points classification, etc.).
+    
+    Example usage:
+    - Get year-by-year stats for Tour de France (ID: 17)
+    - Get year-by-year stats for Giro d'Italia (ID: 18, classification_num=1)
+    
+    Returns a formatted string with:
+    - Year-by-year results
+    - Winner and team information
+    - Classification details
+    - Country information"""
+)
 async def get_race_year_by_year(race_id: int, classification_num: int = None) -> str:
     """Get year-by-year statistics for a race.
 
@@ -1010,7 +1291,21 @@ async def get_race_year_by_year(race_id: int, classification_num: int = None) ->
     except Exception as e:
         return f"Error retrieving year-by-year statistics for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the youngest and oldest winners of a race.
+    This tool retrieves information about the youngest and oldest riders to have won a race,
+    including their age at the time of victory and other relevant details.
+    
+    Example usage:
+    - Get age records for Tour de France (ID: 17)
+    - Get age records for Giro d'Italia (ID: 18)
+    
+    Returns a formatted string with:
+    - Youngest winner details
+    - Oldest winner details
+    - Age and year information
+    - Team and country details"""
+)
 async def get_race_youngest_oldest_winners(race_id: int) -> str:
     """Get the youngest and oldest winners of a race.
 
@@ -1068,7 +1363,21 @@ async def get_race_youngest_oldest_winners(race_id: int) -> str:
     except Exception as e:
         return f"Error retrieving youngest and oldest winners for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
 
-@mcp.tool()
+@mcp.tool(
+    description="""Get the all-time stage victories for a race.
+    This tool retrieves a comprehensive list of all stage winners in a race's history,
+    including details such as the year, stage number, winner's name, and team.
+    
+    Example usage:
+    - Get stage victories for Tour de France (ID: 17)
+    - Get stage victories for Giro d'Italia (ID: 18)
+    
+    Returns a formatted string with:
+    - Complete list of stage winners
+    - Year and stage number
+    - Winner and team details
+    - Country information"""
+)
 async def get_race_stage_victories(race_id: int) -> str:
     """Get the all-time stage victories for a race.
 

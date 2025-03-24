@@ -1,1 +1,0 @@
-.. automodule:: first_cycling_api.constants
