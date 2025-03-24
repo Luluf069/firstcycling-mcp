@@ -13,6 +13,13 @@ The server currently exposes the following tools:
 
 - Python 3.10 or higher
 - `uv` package manager (recommended)
+- Dependencies as listed in `pyproject.toml`, including:
+  - mcp
+  - beautifulsoup4
+  - lxml
+  - pandas
+  - slumber
+  - and other packages for web scraping and data processing
 
 ## Setup
 
@@ -26,7 +33,7 @@ The server currently exposes the following tools:
    ```
 3. Install dependencies:
    ```
-   uv add -e .
+   uv pip install -e .
    ```
 
 ## FirstCycling API
