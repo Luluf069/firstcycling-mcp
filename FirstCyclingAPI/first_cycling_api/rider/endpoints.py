@@ -277,3 +277,103 @@ class RiderBestResults(RiderEndpoint):
 		else:
 			# No table found
 			self.results_df = pd.DataFrame()
+
+
+class RiderMonumentResults(RiderEndpoint):
+	"""
+	Rider's results in monuments. Extends RiderEndpoint.
+
+	Attributes
+	----------
+	results_df : pd.DataFrame
+		Table of rider's monument results.
+	"""
+
+	def _parse_soup(self):
+		super()._parse_soup()
+		self._get_monument_results()
+
+	def _get_monument_results(self):
+		# Find table with monument results - first try with both classes
+		table = self.soup.find('table', {'class': "tablesorter sortTabell"}) 
+		
+		# If not found, try with just one class attribute
+		if not table:
+			table = self.soup.find('table', {'class': "tablesorter"})
+		
+		if table:
+			# Check if the table has "No data" content
+			no_data_text = table.get_text().strip()
+			if "No data" in no_data_text:
+				# Table exists but has no data
+				self.results_df = pd.DataFrame()
+				return
+				
+			try:
+				# Try to parse the table manually
+				headers = [th.text.strip() for th in table.find('tr').find_all(['th', 'td'])]
+				
+				# Create empty lists to store row data
+				rows_data = []
+				
+				# Get all data rows (skip the header row)
+				for tr in table.find_all('tr')[1:]:
+					row_data = {}
+					cells = tr.find_all(['td', 'th'])
+					
+					# Skip empty rows
+					if not cells:
+						continue
+						
+					# Map each cell to its header
+					for i, cell in enumerate(cells):
+						if i < len(headers):
+							header = headers[i]
+							row_data[header] = cell.text.strip()
+							
+							# Extract race ID if available
+							if header == 'Race' and cell.find('a'):
+								href = cell.find('a').get('href', '')
+								import re
+								race_id_match = re.search(r'r=(\d+)', href)
+								if race_id_match:
+									row_data['Race_ID'] = race_id_match.group(1)
+									
+							# Extract country code if available
+							if cell.find('img'):
+								img_src = cell.find('img').get('src', '')
+								country_code = img_to_country_code(cell.find('img'))
+								if country_code:
+									row_data['Race_Country'] = country_code
+					
+					rows_data.append(row_data)
+				
+				# Create DataFrame from the collected data
+				self.results_df = pd.DataFrame(rows_data)
+				
+				# If the DataFrame is empty after parsing, set to empty DataFrame
+				if self.results_df.empty:
+					self.results_df = pd.DataFrame()
+					
+			except Exception as e:
+				# If there's an error in parsing, handle it by creating a basic DataFrame manually
+				print(f"Warning: Error parsing monument results table: {str(e)}")
+				# Fallback: Try to create a DataFrame directly from the HTML
+				try:
+					# Parse the basic table
+					html = str(table)
+					self.results_df = pd.read_html(io.StringIO(html), decimal=',')[0]
+					
+					# Check if the table contains "No data"
+					if self.results_df.empty or (self.results_df.shape[0] == 1 and 
+						any("No data" in str(cell) for cell in self.results_df.iloc[0])):
+						self.results_df = pd.DataFrame()
+						return
+						
+				except Exception as e:
+					# If all else fails, just return an empty DataFrame
+					print(f"Warning: Error creating DataFrame from table HTML: {str(e)}")
+					self.results_df = pd.DataFrame()
+		else:
+			# No table found
+			self.results_df = pd.DataFrame()

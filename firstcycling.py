@@ -348,25 +348,38 @@ async def get_rider_monument_results(rider_id: int) -> str:
             info += f"Monument Results for Rider ID {rider_id}:\n\n"
         
         # Get results for each Monument
-        results_df = monument_results.results_df
+        monument_races = {
+            "Milano-Sanremo": [],
+            "Paris-Roubaix": [],
+            "Ronde van Vlaanderen": [],
+            "Liège-Bastogne-Liège": [],
+            "Il Lombardia": []
+        }
         
-        # Group results by race
-        for race in results_df['Race'].unique():
-            race_results = results_df[results_df['Race'] == race]
-            info += f"{race}:\n"
+        # Group results by monument races
+        for _, row in monument_results.results_df.iterrows():
+            race_name = row.get('Race', '')
+            year = row.get('Year', '')
+            position = row.get('Pos', '')
             
-            # Sort by year (most recent first)
-            race_results = race_results.sort_values('Year', ascending=False)
-            
-            for _, row in race_results.iterrows():
-                year = row.get('Year', 'N/A')
-                pos = row.get('Pos', 'N/A')
-                time = row.get('Time', '')
+            # Check if this is one of the 5 monuments
+            for monument in monument_races:
+                if monument in race_name:
+                    monument_races[monument].append((year, position))
+                    break
+        
+        # Format and add results for each monument
+        for monument, results in monument_races.items():
+            if not results:
+                continue
                 
-                result_line = f"  {year}: {pos}"
-                if time:
-                    result_line += f" - {time}"
-                info += result_line + "\n"
+            info += f"{monument}:\n"
+            
+            # Sort results by year in descending order
+            results.sort(key=lambda x: x[0], reverse=True)
+            
+            for year, position in results:
+                info += f"  {year}: {position}\n"
             
             info += "\n"
         
