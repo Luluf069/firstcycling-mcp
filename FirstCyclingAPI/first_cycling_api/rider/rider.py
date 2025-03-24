@@ -13,6 +13,28 @@ class Rider(FirstCyclingObject):
 	"""
 	_default_endpoint = RiderEndpoint
 
+	@classmethod
+	def search(cls, query):
+		"""
+		Search for riders by name.
+
+		Parameters
+		----------
+		query : str
+			The search query string
+
+		Returns
+		-------
+		list
+			List of dictionaries containing matching riders with their IDs and details
+			[
+				{'id': int, 'name': str, 'nationality': str, 'team': str},
+				...
+			]
+		"""
+		results = fc.search(query)
+		return results['riders']
+
 	def _get_response(self, **kwargs):
 		return fc.get_rider_endpoint(self.ID, **kwargs)
 

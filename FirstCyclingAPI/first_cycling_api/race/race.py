@@ -15,6 +15,28 @@ class Race(FirstCyclingObject):
 
 	_default_endpoint = RaceEndpoint
 
+	@classmethod
+	def search(cls, query):
+		"""
+		Search for races by name.
+
+		Parameters
+		----------
+		query : str
+			The search query string
+
+		Returns
+		-------
+		list
+			List of dictionaries containing matching races with their IDs and details
+			[
+				{'id': int, 'name': str, 'country': str},
+				...
+			]
+		"""
+		results = fc.search(query)
+		return results['races']
+
 	def _get_response(self, **kwargs):
 		return fc.get_race_endpoint(self.ID, **kwargs)
 

@@ -18,6 +18,8 @@ mcp = FastMCP("firstcycling")
     This tool provides a detailed overview of a rider's current status and recent performance in professional cycling races. 
     The information includes their current team affiliation, nationality, age, and their most recent race results with positions and times.
     
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
     Example usage:
     - Get basic info for Tadej Pogačar (ID: 16973)
     - Get basic info for Jonas Vingegaard (ID: 16974)
@@ -117,6 +119,8 @@ async def get_rider_info(rider_id: int) -> str:
     including their highest positions in major races, stage wins, and overall classifications. 
     Results are sorted by importance and include detailed information about each race.
     
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
     Example usage:
     - Get top 10 best results for Tadej Pogačar (ID: 16973)
     - Get top 5 best results for Jonas Vingegaard (ID: 16974)
@@ -195,6 +199,8 @@ async def get_rider_best_results(rider_id: int, limit: int = 10) -> str:
     This tool provides detailed information about a rider's performance in cycling's most prestigious three-week races, 
     including their overall classification positions, stage wins, and special classification results. 
     The data is organized chronologically and includes all relevant race details.
+    
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
     
     Example usage:
     - Get Grand Tour results for Tadej Pogačar (ID: 16973)
@@ -280,6 +286,8 @@ async def get_rider_grand_tour_results(rider_id: int) -> str:
     The tool provides comprehensive information about a rider's performance in these historic races, including their positions, 
     times, and any special achievements.
     
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
     Example usage:
     - Get Monument results for Tadej Pogačar (ID: 16973)
     - Get Monument results for Mathieu van der Poel (ID: 16975)
@@ -361,6 +369,8 @@ async def get_rider_monument_results(rider_id: int) -> str:
     This tool retrieves the rider's team history and their UCI ranking points over time. It provides a comprehensive
     overview of their professional career progression through different teams and their performance in the UCI rankings.
     
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
     Example usage:
     - Get team and ranking history for Tadej Pogačar (ID: 16973)
     - Get team and ranking history for Jonas Vingegaard (ID: 16974)
@@ -437,6 +447,8 @@ async def get_rider_team_and_ranking(rider_id: int) -> str:
     description="""Get the complete race history of a professional cyclist, optionally filtered by year.
     This tool retrieves a comprehensive list of all races the rider has participated in, including their
     positions, times, and race categories. It provides a detailed overview of their racing career.
+    
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
     
     Example usage:
     - Get complete race history for Tadej Pogačar (ID: 16973)
@@ -522,6 +534,8 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
     This tool retrieves a comprehensive list of all one-day races the rider has participated in, including
     their positions, times, and race categories. It provides a detailed overview of their performance in
     one-day events.
+    
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
     
     Example usage:
     - Get all one-day race results for Tadej Pogačar (ID: 16973)
@@ -609,6 +623,8 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
     their positions, times, and race categories. It provides a detailed overview of their performance in
     multi-day events.
     
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
     Example usage:
     - Get all stage race results for Tadej Pogačar (ID: 16973)
     - Get 2023 stage race results for Jonas Vingegaard (ID: 16974)
@@ -695,6 +711,8 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
     the years they were with each team. It provides a detailed overview of their professional career
     progression through different teams.
     
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
     Example usage:
     - Get team history for Tadej Pogačar (ID: 16973)
     - Get team history for Jonas Vingegaard (ID: 16974)
@@ -764,6 +782,8 @@ async def get_rider_teams(rider_id: int) -> str:
     This tool retrieves comprehensive information about a race edition, including the general classification,
     race details, and key statistics. It provides a detailed overview of the race's outcome and structure.
     
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
     Example usage:
     - Get 2023 Tour de France results (ID: 17, Year: 2023)
     - Get 2023 Giro d'Italia results (ID: 18, Year: 2023)
@@ -832,6 +852,8 @@ async def get_race_results(race_id: int, year: int) -> str:
     This tool retrieves general information about a race, including its classifications,
     history, and key details. It provides a high-level overview of the race's characteristics
     and structure.
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
     
     Example usage:
     - Get overview for Tour de France (ID: 17)
@@ -924,6 +946,8 @@ async def get_race_overview(race_id: int) -> str:
     elevation profiles, and key details about the route. It provides a comprehensive
     overview of the race's structure and challenges.
     
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
     Example usage:
     - Get 2023 Tour de France stage profiles (ID: 17, Year: 2023)
     - Get 2023 Giro d'Italia stage profiles (ID: 18, Year: 2023)
@@ -1014,6 +1038,8 @@ async def get_race_stage_profiles(race_id: int, year: int) -> str:
     This tool retrieves the list of riders and teams participating in a race.
     It can provide either a basic startlist or an extended version with additional details.
     
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
     Example usage:
     - Get basic startlist for 2023 Tour de France (ID: 17, Year: 2023)
     - Get extended startlist for 2023 Giro d'Italia (ID: 18, Year: 2023, extended=True)
@@ -1083,6 +1109,8 @@ async def get_race_startlist(race_id: int, year: int, extended: bool = False) ->
     description="""Get the victories achieved by a professional cyclist.
     This tool retrieves all victories or filtered victories (World Tour or UCI races only) for a rider.
     It provides details such as the race name, date, and race category.
+    
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
     
     Example usage:
     - Get all victories for Tadej Pogačar (ID: 16973)
@@ -1161,6 +1189,8 @@ async def get_rider_victories(rider_id: int, world_tour: bool = False, uci: bool
     This tool retrieves a comprehensive list of all winners of a race throughout its history,
     including details such as the year, winner's name, and team.
     
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
     Example usage:
     - Get victory table for Tour de France (ID: 17)
     - Get victory table for Giro d'Italia (ID: 18)
@@ -1227,6 +1257,8 @@ async def get_race_victory_table(race_id: int) -> str:
     description="""Get year-by-year statistics for a race.
     This tool retrieves comprehensive statistics for a race across all years, optionally filtered
     by a specific classification (e.g., general classification, points classification, etc.).
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
     
     Example usage:
     - Get year-by-year stats for Tour de France (ID: 17)
@@ -1295,6 +1327,8 @@ async def get_race_year_by_year(race_id: int, classification_num: int = None) ->
     description="""Get the youngest and oldest winners of a race.
     This tool retrieves information about the youngest and oldest riders to have won a race,
     including their age at the time of victory and other relevant details.
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
     
     Example usage:
     - Get age records for Tour de France (ID: 17)
@@ -1368,6 +1402,8 @@ async def get_race_youngest_oldest_winners(race_id: int) -> str:
     This tool retrieves a comprehensive list of all stage winners in a race's history,
     including details such as the year, stage number, winner's name, and team.
     
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
     Example usage:
     - Get stage victories for Tour de France (ID: 17)
     - Get stage victories for Giro d'Italia (ID: 18)
@@ -1430,6 +1466,103 @@ async def get_race_stage_victories(race_id: int) -> str:
         return info
     except Exception as e:
         return f"Error retrieving stage victories for race ID {race_id}: {str(e)}. The race ID may not exist or there might be a connection issue."
+
+@mcp.tool(
+    description="""Search for professional cyclists by name. This tool helps find riders by their name, 
+    returning a list of matching riders with their IDs, nationalities, and current teams. This is useful 
+    when you know a rider's name but need their ID for other operations.
+    
+    Example usage:
+    - Search for "pogacar" to find Tadej Pogačar
+    - Search for "vingegaard" to find Jonas Vingegaard
+    
+    Returns a formatted string with:
+    - List of matching riders
+    - Each rider's ID, name, nationality, and current team
+    - Number of matches found"""
+)
+async def search_rider(query: str) -> str:
+    """Search for riders by name.
+
+    Args:
+        query (str): The search query string to find riders by name.
+
+    Returns:
+        str: A formatted string containing matching riders with their details:
+             - Rider ID
+             - Full name
+             - Nationality
+             - Current team (if available)
+    """
+    try:
+        # Search for riders
+        riders = Rider.search(query)
+        
+        if not riders:
+            return f"No riders found matching the query '{query}'."
+        
+        # Build results string
+        info = f"Found {len(riders)} riders matching '{query}':\n\n"
+        
+        for rider in riders:
+            info += f"ID: {rider['id']}\n"
+            info += f"Name: {rider['name']}\n"
+            if rider['nationality']:
+                info += f"Nationality: {rider['nationality'].upper()}\n"
+            if rider['team']:
+                info += f"Team: {rider['team']}\n"
+            info += "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error searching for riders: {str(e)}"
+
+@mcp.tool(
+    description="""Search for cycling races by name. This tool helps find races by their name, 
+    returning a list of matching races with their IDs and countries. This is useful when you know 
+    a race's name but need its ID for other operations.
+    
+    Example usage:
+    - Search for "tour" to find Tour de France and other tours
+    - Search for "giro" to find Giro d'Italia
+    
+    Returns a formatted string with:
+    - List of matching races
+    - Each race's ID, name, and country
+    - Number of matches found"""
+)
+async def search_race(query: str) -> str:
+    """Search for races by name.
+
+    Args:
+        query (str): The search query string to find races by name.
+
+    Returns:
+        str: A formatted string containing matching races with their details:
+             - Race ID
+             - Race name
+             - Country
+    """
+    try:
+        # Search for races
+        races = Race.search(query)
+        
+        if not races:
+            return f"No races found matching the query '{query}'."
+        
+        # Build results string
+        info = f"Found {len(races)} races matching '{query}':\n\n"
+        
+        for race in races:
+            info += f"ID: {race['id']}\n"
+            info += f"Name: {race['name']}\n"
+            if race['country']:
+                info += f"Country: {race['country'].upper()}\n"
+            info += "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error searching for races: {str(e)}"
 
 if __name__ == "__main__":
     # Initialize and run the server
