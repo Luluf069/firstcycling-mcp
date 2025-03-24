@@ -420,51 +420,128 @@ async def get_rider_team_and_ranking(rider_id: int) -> str:
         # Get team and ranking information
         team_ranking = rider.team_and_ranking()
         
-        # Check if results exist
-        if team_ranking is None or not hasattr(team_ranking, 'results_df') or team_ranking.results_df.empty:
-            return f"No team and ranking information found for rider ID {rider_id}. This rider ID may not exist."
-        
         # Build information string
         info = ""
         
         # Add rider name if available from header details
         if hasattr(team_ranking, 'header_details') and team_ranking.header_details and 'name' in team_ranking.header_details:
-            info += f"Team and Ranking History for {team_ranking.header_details['name']}:\n\n"
+            rider_name = team_ranking.header_details['name']
+            info += f"Team and Ranking History for {rider_name}:\n\n"
         else:
-            info += f"Team and Ranking History for Rider ID {rider_id}:\n\n"
-        
-        # Get results
-        results_df = team_ranking.results_df
-        
-        # Sort by year (most recent first)
-        results_df = results_df.sort_values('Year', ascending=False)
-        
-        # Group by year
-        for year in results_df['Year'].unique():
-            year_data = results_df[results_df['Year'] == year]
-            info += f"{year}:\n"
+            # Try to extract rider name from page title
+            if hasattr(team_ranking, 'soup'):
+                title = team_ranking.soup.find('title')
+                if title and '|' in title.text:
+                    rider_name = title.text.split('|')[0].strip()
+                    info += f"Team and Ranking History for {rider_name}:\n\n"
+                else:
+                    info += f"Team and Ranking History for Rider ID {rider_id}:\n\n"
+            else:
+                info += f"Team and Ranking History for Rider ID {rider_id}:\n\n"
+
+        # Check if we need to use the default parsing or direct HTML parsing
+        if hasattr(team_ranking, 'results_df') and not (team_ranking.results_df is None or team_ranking.results_df.empty):
+            # Use the default parsed results
+            results_df = team_ranking.results_df
             
-            # Get team information
-            team = year_data['Team'].iloc[0] if not year_data['Team'].empty else 'N/A'
-            info += f"  Team: {team}\n"
+            # Sort by year (most recent first)
+            results_df = results_df.sort_values('Year', ascending=False)
             
-            # Get ranking information
-            ranking = year_data['Ranking'].iloc[0] if not year_data['Ranking'].empty else 'N/A'
-            points = year_data['Points'].iloc[0] if not year_data['Points'].empty else 'N/A'
+            # Group by year
+            for year in results_df['Year'].unique():
+                year_data = results_df[results_df['Year'] == year]
+                info += f"{year}:\n"
+                
+                # Get team information
+                team = year_data['Team'].iloc[0] if not year_data['Team'].empty else 'N/A'
+                info += f"  Team: {team}\n"
+                
+                # Get ranking information
+                ranking = year_data['Ranking'].iloc[0] if not year_data['Ranking'].empty else 'N/A'
+                points = year_data['Points'].iloc[0] if not year_data['Points'].empty else 'N/A'
+                
+                if ranking != 'N/A' or points != 'N/A':
+                    info += "  UCI Ranking: "
+                    if ranking != 'N/A':
+                        info += f"{ranking}"
+                    if points != 'N/A':
+                        info += f" ({points} points)"
+                    info += "\n"
+                
+                info += "\n"
+        else:
+            # Direct HTML parsing if results_df is not available
+            if not hasattr(team_ranking, 'soup'):
+                return f"No team and ranking information found for rider ID {rider_id}. This rider ID may not exist."
             
-            if ranking != 'N/A' or points != 'N/A':
-                info += "  UCI Ranking: "
-                if ranking != 'N/A':
-                    info += f"{ranking}"
-                if points != 'N/A':
-                    info += f" ({points} points)"
+            soup = team_ranking.soup
+            
+            # Look for team and ranking information in tables
+            tables = soup.find_all('table')
+            stats_table = None
+            
+            # Find the table with team and ranking information
+            # Usually, it's a table with "Year", "Team", "Ranking", "Points" headers
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')]
+                if len(headers) >= 3 and "Year" in headers and "Team" in headers:
+                    stats_table = table
+                    break
+            
+            if stats_table is None:
+                return f"No team and ranking information could be found for rider ID {rider_id}."
+            
+            # Parse the table rows
+            rows = stats_table.find_all('tr')
+            
+            # Skip the header row
+            data = []
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) >= 3:  # Ensure we have enough columns
+                    year = cols[0].text.strip()
+                    
+                    # Extract team (might be in a link)
+                    team_col = cols[1]
+                    team_link = team_col.find('a')
+                    team = team_link.text.strip() if team_link else team_col.text.strip()
+                    
+                    # Extract ranking and points 
+                    # (format can vary but typically in columns 2 and 3)
+                    ranking = cols[2].text.strip() if len(cols) > 2 else 'N/A'
+                    points = cols[3].text.strip() if len(cols) > 3 else 'N/A'
+                    
+                    data.append({
+                        'Year': year,
+                        'Team': team,
+                        'Ranking': ranking,
+                        'Points': points
+                    })
+            
+            # Sort by year (most recent first)
+            data.sort(key=lambda x: x['Year'], reverse=True)
+            
+            # Build the information string
+            for item in data:
+                info += f"{item['Year']}:\n"
+                info += f"  Team: {item['Team']}\n"
+                
+                if item['Ranking'] != 'N/A' or item['Points'] != 'N/A':
+                    info += "  UCI Ranking: "
+                    if item['Ranking'] != 'N/A':
+                        info += f"{item['Ranking']}"
+                    if item['Points'] != 'N/A':
+                        info += f" ({item['Points']} points)"
+                    info += "\n"
+                
                 info += "\n"
             
-            info += "\n"
+            if not data:
+                return f"No team and ranking information could be parsed for rider ID {rider_id}."
         
         return info
     except Exception as e:
-        return f"Error retrieving team and ranking information for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
+        return f"An error occurred while getting team and ranking information for rider ID {rider_id}: {str(e)}"
 
 @mcp.tool(
     description="""Get the complete race history of a professional cyclist, optionally filtered by year.
