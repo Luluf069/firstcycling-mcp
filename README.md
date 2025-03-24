@@ -41,7 +41,7 @@ This MCP server offers rich access to professional cycling data, providing tools
 
 ## FirstCycling API
 
-This server uses the [FirstCycling API](https://github.com/Lsdefine/first-cycling-api), which has been integrated directly into the project. The API provides methods to fetch data from the FirstCycling website through web scraping.
+This server uses the [FirstCycling API](https://github.com/baronet2/FirstCyclingAPI), which has been integrated directly into the project. The API provides methods to fetch data from the FirstCycling website through web scraping.
 
 ## MCP Tools
 
