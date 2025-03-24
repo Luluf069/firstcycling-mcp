@@ -1,13 +1,16 @@
 # FirstCycling MCP Server
 
-This is a Model Context Protocol (MCP) server that provides professional cycling data from FirstCycling. It allows you to retrieve information about professional cyclists, race results, and more.
+This is a Model Context Protocol (MCP) server that provides professional cycling data from FirstCycling. It allows you to retrieve comprehensive information about professional cyclists, race results, race details, and historical cycling data.
 
 ## Features
 
-The server currently exposes the following tools:
+This MCP server offers rich access to professional cycling data, providing tools for:
 
-- **get_rider_info**: Retrieves information about a professional cyclist based on their FirstCycling rider ID.
-- **get_race_results**: Retrieves results for a specific race in a given year based on the FirstCycling race ID.
+- Finding information about professional cyclists
+- Retrieving race results and details
+- Exploring historical race data
+- Analyzing rider performance and career progression
+- Accessing information about cycling teams and competitions
 
 ## Requirements
 
@@ -40,12 +43,6 @@ The server currently exposes the following tools:
 
 This server uses the [FirstCycling API](https://github.com/Lsdefine/first-cycling-api), which has been integrated directly into the project. The API provides methods to fetch data from the FirstCycling website through web scraping.
 
-### API Features
-
-- Rider information (profile, results)
-- Race results and information
-- Rankings
-
 ### Common FirstCycling IDs
 
 #### Riders
@@ -53,7 +50,9 @@ This server uses the [FirstCycling API](https://github.com/Lsdefine/first-cyclin
 - Tadej Pogačar: 16973
 - Jonas Vingegaard: 21527
 - Remco Evenepoel: 23697
-- Primož Roglič: 10635
+- Primož Roglič: 18655
+- Mathieu van der Poel: 16672
+- Wout van Aert: 19077
 
 #### Races
 
@@ -62,6 +61,48 @@ This server uses the [FirstCycling API](https://github.com/Lsdefine/first-cyclin
 - Vuelta a España: 23
 - Paris-Roubaix: 30
 - Tour of Flanders: 29
+- Milan-San Remo: 4
+- Liège-Bastogne-Liège: 11
+- Il Lombardia: 10
+
+## MCP Tools
+
+The server exposes the following tools through the Model Context Protocol:
+
+### Rider Information
+
+| Tool | Description |
+|------|-------------|
+| `get_rider_info` | Get basic biographical information about a rider including nationality, birthdate, weight, height, and current team |
+| `get_rider_best_results` | Retrieve a rider's best career results, sorted by importance |
+| `get_rider_grand_tour_results` | Get a rider's results in Grand Tours (Tour de France, Giro d'Italia, Vuelta a España) |
+| `get_rider_monument_results` | Retrieve a rider's results in cycling's Monument classics |
+| `get_rider_team_and_ranking` | Get a rider's team history and UCI ranking evolution over time |
+| `get_rider_race_history` | Retrieve a rider's complete race participation history, optionally filtered by year |
+| `get_rider_one_day_races` | Get a rider's results in one-day races, optionally filtered by year |
+| `get_rider_stage_races` | Get a rider's results in multi-day stage races, optionally filtered by year |
+| `get_rider_teams` | Retrieve the complete team history of a rider throughout their career |
+| `get_rider_victories` | Get a list of a rider's career victories, with optional filters for WorldTour or UCI races |
+
+### Race Information
+
+| Tool | Description |
+|------|-------------|
+| `get_race_results` | Retrieve results for a specific race edition by race ID and year |
+| `get_race_overview` | Get general information about a race including history, records, and past winners |
+| `get_race_stage_profiles` | Retrieve stage profiles and details for multi-stage races |
+| `get_race_startlist` | Get the startlist for a specific race edition with detailed or basic team information |
+| `get_race_victory_table` | Retrieve the all-time victory table for a race showing riders with most wins |
+| `get_race_year_by_year` | Get year-by-year results for a race with optional classification filter |
+| `get_race_youngest_oldest_winners` | Retrieve information about the youngest and oldest winners of a race |
+| `get_race_stage_victories` | Get information about stage victories in multi-stage races |
+
+### Search Tools
+
+| Tool | Description |
+|------|-------------|
+| `search_rider` | Search for riders by name, returning their IDs and basic information |
+| `search_race` | Search for races by name, returning their IDs and basic information |
 
 ## Usage
 
@@ -86,9 +127,10 @@ To integrate this server with Claude for Desktop:
 2. Add the server to your configuration:
    ```json
    {
-     "proxyServers": {
+     "mcpServers": {
        "firstcycling": {
-         "command": ["python", "-m", "mcp.transport.subprocess", "firstcycling.py"]
+         "command": "uv",
+         "args": ["--directory", "/path/to/server/directory", "run", "firstcycling.py"]
        }
      }
    }
@@ -96,14 +138,37 @@ To integrate this server with Claude for Desktop:
 
 3. Restart Claude for Desktop
 
-## Example Queries
+## Real-World Use Cases
 
-Once connected to Claude, you can ask:
+With this MCP server, you can use Claude to:
 
-- "Who is Tadej Pogačar? Get his rider information with ID 16973."
-- "Show me the results of the 2023 Tour de France (race ID 17)."
-- "Get rider profile for Remco Evenepoel (ID 23697)."
-- "What were the results of Paris-Roubaix (ID 30) in 2024?"
+### Rider Analysis
+
+- **Performance Tracking**: "How has Tadej Pogačar performed in the Tour de France over the years? Use rider ID 16973."
+- **Career Progression**: "Show me the team history and career progression of Wout van Aert (ID 19077)."
+- **Specialization Analysis**: "What are Mathieu van der Poel's (ID 16672) results in Monument classics?"
+- **Victory Analysis**: "List all WorldTour victories for Jonas Vingegaard (ID 21527)."
+- **Historical Comparison**: "Compare the Grand Tour results of Primož Roglič (ID 18655) and Jonas Vingegaard (ID 21527)."
+
+### Race Research
+
+- **Recent Results**: "Show me the results of the 2023 Paris-Roubaix (race ID 30)."
+- **Historical Context**: "Who are the youngest and oldest winners of the Tour of Flanders (ID 29)?"
+- **Team Analysis**: "Get the startlist for the 2023 Tour de France (race ID 17) with detailed team information."
+- **Race Statistics**: "Show me the victory table for Liège-Bastogne-Liège (ID 11). Who has won it the most times?"
+- **Stage Information**: "Can you show me the stage profiles for the 2023 Giro d'Italia (race ID 13)?"
+
+### Sports Journalism
+
+- "Create a detailed profile of Remco Evenepoel (ID 23697) for a cycling magazine article."
+- "Write a preview for the upcoming Tour de France based on the recent results of top contenders like Tadej Pogačar and Jonas Vingegaard."
+- "Analyze the evolution of Tom Pidcock's career based on his race results and team history."
+
+### Cycling Education
+
+- "Explain what makes the Monument classics special using data about their history and winners."
+- "Create an educational summary about Grand Tours and their significance in professional cycling."
+- "Describe the typical career progression of a professional cyclist using examples from the data."
 
 ## License
 
