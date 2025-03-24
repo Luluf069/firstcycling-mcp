@@ -44,14 +44,7 @@ class Race(FirstCyclingObject):
             # Find best matching race ID using fuzzy matching
             race_id = search_race_id(query, html)
             if race_id is not None:
-                # Return a dictionary with all expected keys
-                return [{
-                    'id': race_id,
-                    'name': query,
-                    'country': '',
-                    'date': '',
-                    'category': category
-                }]
+                return [{'id': race_id, 'name': query}]
             else:
                 return []
         except Exception as e:

@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Search | FirstCycling</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="The World's Biggest cycling database. Cycling statistics, race results, official rankings, team- and rider profiles. Created by the fans for the fans." />
+  <meta name="keywords" content="Pro Cycling, Cycling results, Cycling ranking, Cycling statistics, UCI Cycling, Road races, Cyclocross, Mountain bike, Track" />
+  
+  <link rel="alternate" hreflang="x-default" href="https://firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="en" href="https://firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="da" href="https://dk.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="de" href="https://de.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="es" href="https://es.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="eu" href="https://eu.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="fr" href="https://fr.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="hr" href="https://hr.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="id" href="https://id.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="it" href="https://it.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="ja" href="https://jp.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="nl" href="https://nl.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="no" href="https://no.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="pl" href="https://pl.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="pt" href="https://pt.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="sl" href="https://si.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="sv" href="https://se.firstcycling.com/search.php?s=test" />
+  <link rel="alternate" hreflang="tr" href="https://tr.firstcycling.com/search.php?s=test" />
+<link rel="apple-touch-icon" href="https://firstcycling.com/img/icon.png">
+  <link rel="icon" sizes="150x150" href="https://firstcycling.com/img/icon.png">
+  <link rel="shortcut icon" sizes="150x150" href="https://firstcycling.com/img/icon.png">
+  <link rel="shortcut icon" type="image/png" href="https://firstcycling.com/img/favicon.png" />
+  <link rel="stylesheet" type="text/css" href="lib/font-awesome-4.6.3/css/font-awesome.min.css" async />
+  <link rel="stylesheet" type="text/css" href="css/5point991.css" />
+  <link rel="stylesheet" type="text/css" href="css/bigflags3.css" />
+  <style>
+  	@font-face
+	{
+	  font-family: 'Oswald';
+	  font-style: normal;
+	  font-weight: 400;
+	  src: url(https://fonts.gstatic.com/s/oswald/v48/TK3_WkUHHAIjg75cFRf3bXL8LICs1_FvsUZiZQ.woff2) format('woff2');
+	  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+	  font-display: swap;
+	}
+  	button:hover
+  	{
+  		cursor: pointer;
+  		background:white;
+  		color:blue;
+  	}
+	table.tablesorter tbody tr.vin td
+	{
+		background:rgb(34,51,62,.25);
+		color: black;
+	}
+	table.tablesorter tbody tr.vin td a
+	{
+		background:none;
+	}
+		@-moz-document url-prefix() {
+      .sidemeny2 a
+      {
+      	padding-bottom:2px;
+      }
+	}
+	  </style>
+    <script src="https://tags.refinery89.com/firstcyclingcom.js" async></script>
+    <script type="text/javascript" src="js/jquery-3.6.0.min.js"></script>
+  	<script type="text/javascript">
+		$(document).ready(function(){
+			$('table.tablesorter:not(.notOddEven) tbody tr').mouseover(function() {
+				$(this).addClass('vin');
+			}).mouseout(function() {
+				$(this).removeClass('vin');
+			});
+     				});
+		</script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-891JSNFXKL"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-891JSNFXKL');
+	</script>
+</head>
+
+
+<body>
+<div id='topp' style="position:fixed;top:0;left:0;z-index:998;height:55px;border-bottom:1px solid #555;background:#eee;">
+	<div id='toppInner' style="z-index:8;">
+		<div class="left" style="width:130px;">
+			<div style='float:left;margin:13px 9px 0 3px;';>
+				 <a href='index.php' style="background:#252525;color:white;font-size:1.25em;padding:1px 8px 2px;border-radius:2px;">FIRSTCYCLING</a>
+			</div>
+		</div>
+
+		<div class='right' style='margin:4px 0 0;'>
+
+		<div class="dropdown">
+		  <input id="dropcheck" class="dropcheck" type="checkbox">
+		  <label for="dropcheck" class="dropbtn" style="color:#252525;font-size:1.1em;">Road <i class="fa fa-caret-down" style="font-size:1em;color:#252525;"></i></label>
+
+		  <div class="dropdown-content">
+		    <a title="Road"href="index.php">Road</a>
+		    <a title="Amateur"href="amateur.php">Amateur</a>
+		    <a title="Junior"href="junior.php">Junior</a>
+		    <a title="Cyclocross"href="cyclocross.php">Cyclocross</a>
+		    <a title="MTB"href="mountainbike.php">MTB</a>
+		    <a title="Track"href="track.php">Track</a>
+		    <a title="Transfers"href="transfers.php">Transfers</a>
+		    <a title="Fantasy"href="fantasy.php">Fantasy</a>
+		    		  </div>
+		</div>
+
+			<table class="right" cellspacing="2" style="width:20px;">
+			<tr>
+				<td align="center">
+					<a href='languages.php' title='Change language' style="margin:0;padding:3px 2px">
+						<span style="margin-top:12px;" class="flag flag-gb"></span></a>
+				</td>
+				<td align="center">
+					<a href="signUp.php" title="Personal profile" style="font-size:0.8em;margin:0;padding:3px 2px;"><i class="fa fa-user fa-lg fa-fw"></i></a>
+				</td>
+								<td align="center" style="padding-top:3px;">
+					<a title="Search" href="#search" class="ballesteros" style="font-size:1.03em;margin:0;padding:3px 2px;"><i class="fa fa-search la-lg"></i></a>
+				</td>
+							</tr>
+			</table>
+		</div>
+
+			<div id='meny' class="left" style="font-size:1.1em;margin:13px 24px 0 0;">
+
+				<div class="left">
+
+					<div class="linje2synlig" style="font-size:0.95em;">
+
+					
+			<form name='sokefelt' action='search.php' method='GET'>
+				<input type='text' name='s' value="test" placeholder='Search for riders, teams or races ...' size='18' style='width:380px;padding:3px 9px 4px;height:20px;font-size:0.9em;' required />
+			</form>
+
+		
+		</div>
+
+		
+			<form name='sokefelt' action='search.php' method='GET' style="margin-left:9px;display:none;" class="visSokeFelt">
+				<input type='text' name='s' value='' placeholder='Search for riders, teams or races ...' size='18' style='width:380px;padding:3px 9px 4px;height:20px;font-size:0.9em;' required />
+			</form>
+
+		
+				</div>
+
+			</div>
+
+		</div>
+		</div>
+
+	</div>
+</div>
+
+
+			<div style="height:48px;"></div>
+	<div class="r89-desktop-billboard-atf"></div>
+	
+
+<div style="width:1460px;margin:auto;">
+<div id='wrapper'>
+	<div style="width:300px;height:600px;position:-webkit-sticky;position:sticky;float:left;top:42px;margin:18px 22px 0 0;">
+		<div class="r89-desktop-hpa-atf"></div>
+	</div><div style="width:300px;height:600px;position:-webkit-sticky;position:sticky;float:right;top:42px;margin:18px 0 0 8px;">
+		<div class="r89-desktop-hpa-atf"></div>
+	</div>
+	<div style="width:816px;float:left;">
+
+		
+<h1>Search <span class="headerExtra">| test</span></h1>
+
+<span class='left' style="margin-bottom:12px;">
+	<input type='radio' value='' name='dg' class="displayGender" checked />
+	All	<input type='radio' value='women' name='dg' class="displayGender" style="margin-left:6px;" />
+	Women	<input type='radio' value='men' name='dg' class="displayGender" style="margin-left:6px;" />
+	Men</span>
+
+
+<div class='cont480' style='margin:0 50px 24px 0;width:360px;min-height:360px;clear:both;'>
+
+		
+		<table class='sortRiders tablesorter women'>
+			<thead>
+				<tr>
+					<th colspan="3">Riders | Selected</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="women">
+			<td style="display:none;">SantestebanAne</td>
+			<td width="3%">
+				<span class="flag flag-es"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=89450" title="Ane Santesteban"><span style="text-transform:uppercase;">Santesteban</span> Ane</a>
+				<br><span style="color:grey;">Laboral Kutxa-Fundacion Euskadi</span>
+			</td>
+		</tr>			</tbody>
+		</table>
+
+		
+		<table class='sortRiders tablesorter'>
+			<thead>
+				<tr>
+					<th colspan="3">Riders | Active</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="women">
+			<td style="display:none;">OttestadMie Bjørndal</td>
+			<td width="3%">
+				<span class="flag flag-no"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=93003" title="Mie Bjørndal Ottestad"><span style="text-transform:uppercase;">Ottestad</span> Mie Bjørndal</a>
+				<br><span style="color:grey;">Uno-X Mobility</span> <span class="grey">| WWT</span>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">TestaMartina</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=191013" title="Martina Testa"><span style="text-transform:uppercase;">Testa</span> Martina</a>
+				<br><span style="color:grey;">Horizons Cycling Club – Team 1971</span>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">OttestadJørgen Bjørndal</td>
+			<td width="3%">
+				<span class="flag flag-no"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=176605" title="Jørgen Bjørndal Ottestad"><span style="text-transform:uppercase;">Ottestad</span> Jørgen Bjørndal</a>
+				<br><span style="color:grey;">Urbano-Vulsteke-Bumaco Cycling Team</span>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">Testa PuliciNicola</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=221149" title="Nicola Testa Pulici"><span style="text-transform:uppercase;">Testa Pulici</span> Nicola</a>
+				<br><span style="color:grey;">Team Fratelli Giorgi</span>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">TestoneAlice</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=234744" title="Alice Testone"><span style="text-transform:uppercase;">Testone</span> Alice</a>
+				<br><span style="color:grey;">Team Di Federico</span>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestoriMichael</td>
+			<td width="3%">
+				<span class="flag flag-ky"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=82318" title="Michael Testori"><span style="text-transform:uppercase;">Testori</span> Michael</a>
+				<br><span style="color:grey;">Airwerks Racing Team</span>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestudValentin</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=182029" title="Valentin Testud"><span style="text-transform:uppercase;">Testud</span> Valentin</a>
+				<br><span style="color:grey;">VC Eckwersheim</span>
+			</td>
+		</tr>			</tbody>
+		</table>
+
+		
+		<table class='sortRiders tablesorter'>
+			<thead>
+				<tr>
+					<th colspan="3">Riders</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="men">
+			<td style="display:none;">TestolinGiovanni</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=7220" title="Giovanni Testolin"><span style="text-transform:uppercase;">Testolin</span> Giovanni</a>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">TestroeteAlison</td>
+			<td width="3%">
+				<span class="flag flag-ca"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=90275" title="Alison Testroete"><span style="text-transform:uppercase;">Testroete</span> Alison</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">MalatestaFranco</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=41946" title="Franco Malatesta"><span style="text-transform:uppercase;">Malatesta</span> Franco</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestiNicola</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=13184" title="Nicola Testi"><span style="text-transform:uppercase;">Testi</span> Nicola</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestiFabio</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=23335" title="Fabio Testi"><span style="text-transform:uppercase;">Testi</span> Fabio</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">PuentestarStalin</td>
+			<td width="3%">
+				<span class="flag flag-ec"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=105382" title="Stalin Puentestar"><span style="text-transform:uppercase;">Puentestar</span> Stalin</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaAnthony</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=24031" title="Anthony Testa"><span style="text-transform:uppercase;">Testa</span> Anthony</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">CotestaLeandro</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=22086" title="Leandro Cotesta"><span style="text-transform:uppercase;">Cotesta</span> Leandro</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">HattestadOle Anders</td>
+			<td width="3%">
+				<span class="flag flag-no"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=21399" title="Ole Anders Hattestad"><span style="text-transform:uppercase;">Hattestad</span> Ole Anders</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">BattestiniArmando</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=152607" title="Armando Battestini"><span style="text-transform:uppercase;">Battestini</span> Armando</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">BattestiniDavid</td>
+			<td width="3%">
+				<span class="flag flag-lu"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=62350" title="David Battestini"><span style="text-transform:uppercase;">Battestini</span> David</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">ContestiniGiuseppe</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=4125" title="Giuseppe Contestini"><span style="text-transform:uppercase;">Contestini</span> Giuseppe</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">Fontestad BenitoJavier</td>
+			<td width="3%">
+				<span class="flag flag-es"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=62626" title="Javier Fontestad Benito"><span style="text-transform:uppercase;">Fontestad Benito</span> Javier</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">GautestadAudun</td>
+			<td width="3%">
+				<span class="flag flag-no"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=78844" title="Audun Gautestad"><span style="text-transform:uppercase;">Gautestad</span> Audun</a>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">GautestadJorunn</td>
+			<td width="3%">
+				<span class="flag flag-no"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=152917" title="Jorunn Gautestad"><span style="text-transform:uppercase;">Gautestad</span> Jorunn</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">LetestuQuentin</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=94928" title="Quentin Letestu"><span style="text-transform:uppercase;">Letestu</span> Quentin</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">MalatestaEdoardo</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=251215" title="Edoardo Malatesta"><span style="text-transform:uppercase;">Malatesta</span> Edoardo</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">MalatestaGuglielmo</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=242782" title="Guglielmo Malatesta"><span style="text-transform:uppercase;">Malatesta</span> Guglielmo</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">MalatestaJacopo</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=50768" title="Jacopo Malatesta"><span style="text-transform:uppercase;">Malatesta</span> Jacopo</a>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">OttestadTora Bjørndal</td>
+			<td width="3%">
+				<span class="flag flag-no"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=139767" title="Tora Bjørndal Ottestad"><span style="text-transform:uppercase;">Ottestad</span> Tora Bjørndal</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">SantestebanNicolas</td>
+			<td width="3%">
+				<span class="flag flag-es"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=227261" title="Nicolas Santesteban"><span style="text-transform:uppercase;">Santesteban</span> Nicolas</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaAngelo</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=10687" title="Angelo Testa"><span style="text-transform:uppercase;">Testa</span> Angelo</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaAntonio</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=9311" title="Antonio Testa"><span style="text-transform:uppercase;">Testa</span> Antonio</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaFabrizio</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=78450" title="Fabrizio Testa"><span style="text-transform:uppercase;">Testa</span> Fabrizio</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaFranco</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=41579" title="Franco Testa"><span style="text-transform:uppercase;">Testa</span> Franco</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaMarco</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=110018" title="Marco Testa"><span style="text-transform:uppercase;">Testa</span> Marco</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaMattia</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=136104" title="Mattia Testa"><span style="text-transform:uppercase;">Testa</span> Mattia</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaMichael</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=156429" title="Michael Testa"><span style="text-transform:uppercase;">Testa</span> Michael</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaNicolo</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=45305" title="Nicolo Testa"><span style="text-transform:uppercase;">Testa</span> Nicolo</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaPablo</td>
+			<td width="3%">
+				<span class="flag flag-pa"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=161882" title="Pablo Testa"><span style="text-transform:uppercase;">Testa</span> Pablo</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaStefano</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=135046" title="Stefano Testa"><span style="text-transform:uppercase;">Testa</span> Stefano</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestaiAlessandro</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=253853" title="Alessandro Testai"><span style="text-transform:uppercase;">Testai</span> Alessandro</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestardJohn</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=56878" title="John Testard"><span style="text-transform:uppercase;">Testard</span> John</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestardiFederico</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=168031" title="Federico Testardi"><span style="text-transform:uppercase;">Testardi</span> Federico</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">Testart AguirreRafael Andres</td>
+			<td width="3%">
+				<span class="flag flag-cl"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=65211" title="Rafael Andres Testart Aguirre"><span style="text-transform:uppercase;">Testart Aguirre</span> Rafael Andres</a>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">TesteDiane</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=200857" title="Diane Teste"><span style="text-transform:uppercase;">Teste</span> Diane</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TesteLucas</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=239928" title="Lucas Teste"><span style="text-transform:uppercase;">Teste</span> Lucas</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TesteP.</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=183189" title="P. Teste"><span style="text-transform:uppercase;">Teste</span> P.</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TesterColin</td>
+			<td width="3%">
+				<span class="flag flag-gi"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=218082" title="Colin Tester"><span style="text-transform:uppercase;">Tester</span> Colin</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestiLuca</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=154303" title="Luca Testi"><span style="text-transform:uppercase;">Testi</span> Luca</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestierPatrice</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=22482" title="Patrice Testier"><span style="text-transform:uppercase;">Testier</span> Patrice</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestonFelix</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=226176" title="Felix Teston"><span style="text-transform:uppercase;">Teston</span> Felix</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestoniAlberto</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=160403" title="Alberto Testoni"><span style="text-transform:uppercase;">Testoni</span> Alberto</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestoniAlfredo</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=47474" title="Alfredo Testoni"><span style="text-transform:uppercase;">Testoni</span> Alfredo</a>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">TestoriEnrica</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=119341" title="Enrica Testori"><span style="text-transform:uppercase;">Testori</span> Enrica</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestoriGianbattista</td>
+			<td width="3%">
+				<span class="flag flag-it"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=151310" title="Gianbattista Testori"><span style="text-transform:uppercase;">Testori</span> Gianbattista</a>
+			</td>
+		</tr><tr class="women">
+			<td style="display:none;">TestouManon</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=159686" title="Manon Testou"><span style="text-transform:uppercase;">Testou</span> Manon</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestsovYevhen</td>
+			<td width="3%">
+				<span class="flag flag-ua"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=189719" title="Yevhen Testsov"><span style="text-transform:uppercase;">Testsov</span> Yevhen</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">TestuLeon</td>
+			<td width="3%">
+				<span class="flag flag-fr"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=148916" title="Leon Testu"><span style="text-transform:uppercase;">Testu</span> Leon</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">ThijssensErntest</td>
+			<td width="3%">
+				<span class="flag flag-be"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=238877" title="Erntest Thijssens"><span style="text-transform:uppercase;">Thijssens</span> Erntest</a>
+			</td>
+		</tr><tr class="men">
+			<td style="display:none;">Tolosa PontestadUnai</td>
+			<td width="3%">
+				<span class="flag flag-es"></span>
+			</td>
+			<td>
+				<a href="rider.php?r=56660" title="Unai Tolosa Pontestad"><span style="text-transform:uppercase;">Tolosa Pontestad</span> Unai</a>
+			</td>
+		</tr>			</tbody>
+		</table>
+
+		
+</div>
+
+<div class='cont480' style='margin-bottom:18px;width:300px;'>
+
+	
+		<table class='tablesorter' style='margin-bottom:18px;'>
+			<thead>
+				<tr>
+					<th>Races</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="women">
+			<td>
+				<span class="flag flag-se"></span>
+				<a href="race.php?r=18026">Arlanda Testtrack Race</a> <span class="grey">| Women</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-se"></span>
+				<a href="race.php?r=1993">Arlanda Testtrack Race</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-se"></span>
+				<a href="race.php?r=18062">Arlanda Testtrack Race Juniors</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-fr"></span>
+				<a href="race.php?r=16864">CX - La Teste du Buch</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="women">
+			<td>
+				<span class="flag flag-es"></span>
+				<a href="race.php?r=25996">Errenteriako Ane Santesteban Txirrindulari Saria</a> <span class="grey">| Women</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-gb"></span>
+				<a href="race.php?r=5870">Fast Test -Ipswich</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-cn"></span>
+				<a href="race.php?r=25614">Guangdong-Hong Kong-Macao</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-gb"></span>
+				<a href="race.php?r=15368">Mendips Test Road Race</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-ie"></span>
+				<a href="race.php?r=3963">National TT Champs Test Event</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-no"></span>
+				<a href="race.php?r=24704">Ottestad ITT (NC)</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="women">
+			<td>
+				<span class="flag flag-no"></span>
+				<a href="race.php?r=24700">Ottestad ITT (NC)</a> <span class="grey">| Women</span>
+			</td>
+		</tr><tr class="women">
+			<td>
+				<span class="flag flag-fr"></span>
+				<a href="race.php?r=22044">Paris Olympics Test Event</a> <span class="grey">| Women</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-fr"></span>
+				<a href="race.php?r=22043">Paris Olympics Test Event</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-cn"></span>
+				<a href="race.php?r=766">Test Event Beijing</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				<span class="flag flag-jp"></span>
+				<a href="race.php?r=10463">Tokyo 2020 Test Event</a> <span class="grey">| Men</span>
+			</td>
+		</tr>			</tbody>
+		</table>
+
+	
+	<table class='tablesorter' style='margin-bottom:18px;'>
+		<thead>
+			<tr>
+				<th>Teams</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr class="men">
+			<td>
+				2025 <span class="flag flag-jp"></span>
+				<a href="team.php?l=48774" title="MISUZUKO TEST TEAM">MISUZUKO TEST TEAM</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2025 <span class="flag flag-gb"></span>
+				<a href="team.php?l=48915" title="Testa Dura RT">Testa Dura RT</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2024 <span class="flag flag-jp"></span>
+				<a href="team.php?l=45391" title="Champion System Japan Test Team">Champion System Japan Test Team</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2022 <span class="flag flag-jp"></span>
+				<a href="team.php?l=31608" title="MAVIC TEST TEAM">MAVIC TEST TEAM</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2022 <span class="flag flag-ca"></span>
+				<a href="team.php?l=28815" title="Yoeleo Test Team p/b 4Mind">Yoeleo Test Team p/b 4Mind</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2021 <span class="flag flag-jp"></span>
+				<a href="team.php?l=26459" title="Pinazou Test Team">Pinazou Test Team</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2020 <span class="flag flag-no"></span>
+				<a href="team.php?l=21985" title="Ottestad IL Junior">Ottestad IL Junior</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2020 <span class="flag flag-no"></span>
+				<a href="team.php?l=22914" title="Ottestad IL Sykkel">Ottestad IL Sykkel</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2020 <span class="flag flag-th"></span>
+				<a href="team.php?l=23303" title="The Master Test Team">The Master Test Team</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2019 <span class="flag flag-es"></span>
+				<a href="team.php?l=14191" title="Controlpack-Badia-Fontestad">Controlpack-Badia-Fontestad</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2018 <span class="flag flag-jp"></span>
+				<a href="team.php?l=23373" title="Swacchi Test Team">Swacchi Test Team</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2017 <span class="flag flag-no"></span>
+				<a href="team.php?l=9687" title="Velostrada Test Team">Velostrada Test Team</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2015 <span class="flag flag-jp"></span>
+				<a href="team.php?l=12276" title="JP Sports Test Team Massa - Andex">JP Sports Test Team Massa - Andex</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2011 <span class="flag flag-jp"></span>
+				<a href="team.php?l=22798" title="JP Sports Test Team">JP Sports Test Team</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="women">
+			<td>
+				2010 <span class="flag flag-nl"></span>
+				<a href="team.php?l=16407" title="Cervélo Test Team">Cervélo Test Team</a> <span class="grey">| Women</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2010 <span class="flag flag-ch"></span>
+				<a href="team.php?l=266" title="Cervelo TestTeam">Cervelo TestTeam</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2005 <span class="flag flag-tw"></span>
+				<a href="team.php?l=13855" title="Dynatest Cycling Team">Dynatest Cycling Team</a> <span class="grey">| Men</span>
+			</td>
+		</tr><tr class="men">
+			<td>
+				2005 <span class="flag flag-jp"></span>
+				<a href="team.php?l=31096" title="Testach Racing">Testach Racing</a> <span class="grey">| Men</span>
+			</td>
+		</tr>		</tbody>
+	</table>
+
+	
+</div>
+
+<style>
+	tr td
+	{
+		line-height:1.35em
+	}
+</style>
+
+<script src="js/jquery.tablesorter2.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		$(".sortRiders").tablesorter( {sortList: [[0,0]]} );
+	});
+    $('.displayGender').click(function(){
+    	gender = $('input[name="dg"]:checked').val();
+
+		if(gender == 'men') {
+      		$('.women').hide();
+      		$('.men').show();
+		}
+		else if(gender == 'women') {
+      		$('.men').hide();
+      		$('.women').show();
+		}
+		else {
+      		$('.men').show();
+      		$('.women').show();
+		}
+    });
+</script>
+
+</div></div>
+
+
+</div>
+
+</div>
+</div>
+
+<div id='footer' style=''>
+	<div id='footerInner' style='overflow: hidden;padding-top:25px;text-align:center;'>
+		<p>
+			<a href='mailto:info@firstcycling.com' title='Email us'>info@firstcycling.com</a>
+			<span style="padding:0 1px;color:grey;">|</span>
+			<a href="http://www.twitter.com/firstcycling" title='Follow us on twitter' target='_blank'><img src="img/mini/twitter.png" title="Twitter" width="14" height="14" align="center" /> FirstCycling</a>
+			<span style="padding:0 1px;color:grey;">|</span>
+			<a href='privacypolicy.php' title='Privacy Policy'>Privacy Policy</a>
+			<span style="padding:0 1px;color:grey;">|</span>
+			&copy; 2025 FirstCycling.com
+		</p>
+
+	</div>
+</div>
+</body>
+</html>

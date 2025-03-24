@@ -2,6 +2,13 @@ from typing import Any
 import sys
 import os
 from mcp.server.fastmcp import FastMCP
+import requests
+from bs4 import BeautifulSoup
+from typing import Dict, List, Optional, Union
+from datetime import datetime
+from FirstCyclingAPI.first_cycling_api.rider.rider import Rider
+from FirstCyclingAPI.first_cycling_api.race.race import Race
+from FirstCyclingAPI.first_cycling_api.api import FirstCyclingAPI
 
 # Add the FirstCyclingAPI directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "FirstCyclingAPI"))
