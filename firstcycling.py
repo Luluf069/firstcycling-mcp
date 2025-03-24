@@ -847,32 +847,32 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
         if hasattr(race_history, 'results_df') and not (race_history.results_df is None or race_history.results_df.empty):
             # Use standard parsing
             results_df = race_history.results_df
-        
-        # Filter by year if specified
-        if year:
-            results_df = results_df[results_df['Year'] == year]
-        
-        # Sort by date (most recent first)
-        results_df = results_df.sort_values('Date', ascending=False)
-        
-        # Group by year
-        for year in results_df['Year'].unique():
-            year_data = results_df[results_df['Year'] == year]
-            info += f"{year}:\n"
             
-            for _, row in year_data.iterrows():
-                date = row.get('Date', 'N/A')
-                race = row.get('Race', 'N/A')
-                pos = row.get('Pos', 'N/A')
-                category = row.get('CAT', 'N/A')
-                time = row.get('Time', '')
+            # Filter by year if specified
+            if year:
+                results_df = results_df[results_df['Year'] == year]
+            
+            # Sort by date (most recent first)
+            results_df = results_df.sort_values('Date', ascending=False)
+            
+            # Group by year
+            for year_val in results_df['Year'].unique():
+                year_data = results_df[results_df['Year'] == year_val]
+                info += f"{year_val}:\n"
                 
-                result_line = f"  {date} - {race} ({category}): {pos}"
-                if time:
-                    result_line += f" - {time}"
-                info += result_line + "\n"
-            
-            info += "\n"
+                for _, row in year_data.iterrows():
+                    date = row.get('Date', 'N/A')
+                    race = row.get('Race', 'N/A')
+                    pos = row.get('Pos', 'N/A')
+                    category = row.get('CAT', 'N/A')
+                    time = row.get('Time', '')
+                    
+                    result_line = f"  {date} - {race} ({category}): {pos}"
+                    if time:
+                        result_line += f" - {time}"
+                    info += result_line + "\n"
+                
+                info += "\n"
         else:
             # Direct HTML parsing
             if not hasattr(race_history, 'soup') or not race_history.soup:
@@ -884,31 +884,83 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
             tables = soup.find_all('table')
             race_table = None
             
-            # Look for the appropriate table that contains race history
-            # Usually has headers for date, race, position, etc.
+            # First try to find tables with specific headers
             for table in tables:
                 headers = [th.text.strip() for th in table.find_all('th')]
-                if len(headers) >= 3 and ("Date" in headers or "Race" in headers):
+                if len(headers) >= 3 and any(("Date" in h or "Race" in h or "Pos" in h) for h in headers):
                     race_table = table
                     break
             
+            # If not found, look for any table that might contain race data
+            if not race_table and tables:
+                # Try to find a table with typical race data structure (multiple rows with dates, etc.)
+                for table in tables:
+                    rows = table.find_all('tr')
+                    if len(rows) >= 3:  # Header row + at least 2 data rows
+                        # Check if any cell in the first row contains date-like text
+                        first_row_cells = rows[1].find_all('td')
+                        for cell in first_row_cells:
+                            cell_text = cell.text.strip()
+                            # Look for date patterns like DD.MM or YYYY or MM/DD
+                            if (len(cell_text) >= 4 and 
+                                ('.' in cell_text or '/' in cell_text or '-' in cell_text or 
+                                 (cell_text.isdigit() and int(cell_text) > 2000 and int(cell_text) < 2030))):
+                                race_table = table
+                                break
+                    if race_table:
+                        break
+            
+            # If we still couldn't find a table, direct URL request to races page
             if not race_table:
-                return f"Could not find race history table for rider ID {rider_id}."
+                # Try to directly access the races page
+                races_url = f"https://firstcycling.com/rider.php?r={rider_id}&races=2"
+                try:
+                    races_response = requests.get(races_url)
+                    if races_response.status_code == 200:
+                        races_soup = BeautifulSoup(races_response.text, 'html.parser')
+                        tables = races_soup.find_all('table')
+                        
+                        # Look for tables with race data
+                        for table in tables:
+                            headers = [th.text.strip() for th in table.find_all('th')]
+                            if len(headers) >= 3 and any(keyword in ' '.join(headers).lower() 
+                                                        for keyword in ['date', 'race', 'result', 'position']):
+                                race_table = table
+                                break
+                except Exception as table_error:
+                    # If direct access fails, continue with the original soup
+                    pass
+            
+            if not race_table:
+                # Get the rider name for a more helpful error message
+                rider_name_text = ""
+                try:
+                    if hasattr(race_history, 'soup'):
+                        name_element = race_history.soup.find('h1')
+                        if name_element:
+                            rider_name_text = f" ({name_element.text.strip()})"
+                except:
+                    pass
+                
+                return f"Could not find race history table for rider ID {rider_id}{rider_name_text}. The data may not be available on FirstCycling."
             
             # Parse race data
             rows = race_table.find_all('tr')
             race_data = []
             
             # Get column indices from header row
-            headers = [th.text.strip() for th in rows[0].find_all('th')]
+            headers = [th.text.strip() for th in rows[0].find_all('th')] if rows and rows[0].find_all('th') else []
             
-            date_idx = next((i for i, h in enumerate(headers) if "Date" in h), None)
-            race_idx = next((i for i, h in enumerate(headers) if "Race" in h), None)
-            pos_idx = next((i for i, h in enumerate(headers) if "Pos" in h), None)
-            cat_idx = next((i for i, h in enumerate(headers) if "CAT" in h), None)
+            # Determine column positions, with fallbacks if headers aren't clear
+            date_idx = next((i for i, h in enumerate(headers) if "Date" in h), 0)  # Default to first column
+            race_idx = next((i for i, h in enumerate(headers) if "Race" in h), 1)  # Default to second column
+            pos_idx = next((i for i, h in enumerate(headers) if "Pos" in h or "Result" in h), 2)  # Default to third column
+            cat_idx = next((i for i, h in enumerate(headers) if "CAT" in h or "Category" in h), None)  # May not exist
             
-            # Skip header row
-            for row in rows[1:]:
+            # Skip header row if it exists
+            start_row = 1 if headers else 0
+            
+            for row in rows[start_row:]:
                 cols = row.find_all('td')
                 if len(cols) < 3:  # Ensure it's a data row
                     continue
@@ -965,6 +1017,9 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
                     info += result_line + "\n"
                 
                 info += "\n"
+            
+            if not race_data:
+                info += "No race history found for this rider.\n"
         
         return info
     except Exception as e:
