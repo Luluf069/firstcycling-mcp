@@ -1,5 +1,5 @@
 from ..objects import FirstCyclingObject
-from .endpoints import RiderEndpoint, RiderYearResults
+from .endpoints import RiderEndpoint, RiderYearResults, RiderVictories
 from ..api import fc
 import requests
 from bs4 import BeautifulSoup
@@ -325,9 +325,9 @@ class Rider(FirstCyclingObject):
 
 		Returns
 		-------
-		RiderEndpoint
+		RiderVictories
 		"""
-		return self._get_endpoint(high=1, k=1, uci=1 if uci else None, wt=1 if world_tour else None)
+		return self._get_endpoint(endpoint=RiderVictories, high=1, k=1, uci=1 if uci else None, wt=1 if world_tour else None)
 
 	def grand_tour_results(self):
 		"""

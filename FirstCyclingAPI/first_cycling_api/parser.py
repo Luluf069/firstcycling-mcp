@@ -60,9 +60,15 @@ def parse_table(table):
 	""" Convert HTML table from bs4 to pandas DataFrame. Return None if no data. """
 	# TODO for rider results, format dates nicely with hidden column we are throwing away
 	import pandas as pd
+	import io
+
+	# Check early if table contains "No data" text
+	if table and "No data" in table.get_text():
+		return None
 
 	# Load pandas DataFrame from raw text only
-	out_df = pd.read_html(str(table), decimal=',')[0]
+	html = str(table)
+	out_df = pd.read_html(io.StringIO(html), decimal=',')[0]
 
 	if out_df.iat[0, 0] == 'No data': # No data
 		return None
