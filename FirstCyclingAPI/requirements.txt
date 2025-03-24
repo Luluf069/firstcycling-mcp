@@ -1,0 +1,11 @@
+beautifulsoup4
+lxml
+numpy
+pandas
+python-dateutil
+pytz
+requests
+setuptools
+slumber
+soupsieve
+urllib3
