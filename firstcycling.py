@@ -9,6 +9,7 @@ from datetime import datetime
 from FirstCyclingAPI.first_cycling_api.rider.rider import Rider
 from FirstCyclingAPI.first_cycling_api.race.race import Race
 from FirstCyclingAPI.first_cycling_api.api import FirstCyclingAPI
+import re
 
 # Add the FirstCyclingAPI directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "FirstCyclingAPI"))
@@ -110,63 +111,155 @@ async def get_rider_info(rider_id: int) -> str:
         # Create a rider instance
         rider = Rider(rider_id)
         
-        # Get rider year results (latest year by default)
-        year_results = rider.year_results()
-        
-        # Check if results exist
-        if year_results is None or not hasattr(year_results, 'results_df') or year_results.results_df.empty:
-            return f"No results found for rider ID {rider_id}. This rider ID may not exist."
-        
-        # Extract details from the response
-        header_details = year_results.header_details
-        sidebar_details = year_results.sidebar_details
-        
-        # Build rider information string
-        info = ""
-        
-        # Add name from header details
-        if header_details and 'name' in header_details:
-            info += f"Name: {header_details['name']}\n"
-        else:
-            info += f"Rider ID: {rider_id}\n"
-        
-        # Add team if available
-        if header_details and 'current_team' in header_details:
-            info += f"Team: {header_details['current_team']}\n"
-        
-        # Add Twitter/social media if available
-        if header_details and 'twitter_handle' in header_details:
-            info += f"Twitter: @{header_details['twitter_handle']}\n"
-        
-        # Add information from sidebar details
-        if sidebar_details:
-            if 'Nationality' in sidebar_details:
-                info += f"Nationality: {sidebar_details['Nationality']}\n"
-            if 'Date of Birth' in sidebar_details:
-                info += f"Date of Birth: {sidebar_details['Date of Birth']}\n"
-            if 'UCI ID' in sidebar_details:
-                info += f"UCI ID: {sidebar_details['UCI ID']}\n"
-        
-        # Get results for current year
-        if hasattr(year_results, 'results_df') and not year_results.results_df.empty:
-            info += "\nRecent Results:\n"
-            results_count = min(5, len(year_results.results_df))
-            for i in range(results_count):
-                row = year_results.results_df.iloc[i]
-                date = row.get('Date', 'N/A')
-                race = row.get('Race', 'N/A')
-                pos = row.get('Pos', 'N/A')
-                info += f"{i+1}. {date} - {race}: {pos}\n"
-        
-        # Add victories if available (just a count)
+        # Use direct HTML parsing approach to handle cases where the regular parsing fails
         try:
-            victories = rider.victories(uci=True)
-            if hasattr(victories, 'results_df') and not victories.results_df.empty:
-                info += f"\nUCI Victories: {len(victories.results_df)}\n"
-        except:
-            pass
-        
-        return info
+            # Try to get rider year results using standard method
+            year_results = rider.year_results()
+            
+            # Check if results exist
+            if year_results is None or not hasattr(year_results, 'results_df') or year_results.results_df.empty:
+                raise Exception("No results found using standard method")
+            
+            # Extract details from the response
+            header_details = year_results.header_details
+            sidebar_details = year_results.sidebar_details
+            
+            # Build rider information string
+            info = ""
+            
+            # Add name from header details
+            if header_details and 'name' in header_details:
+                info += f"Name: {header_details['name']}\n"
+            else:
+                info += f"Rider ID: {rider_id}\n"
+            
+            # Add team if available
+            if header_details and 'current_team' in header_details:
+                info += f"Team: {header_details['current_team']}\n"
+            
+            # Add Twitter/social media if available
+            if header_details and 'twitter_handle' in header_details:
+                info += f"Twitter: @{header_details['twitter_handle']}\n"
+            
+            # Add information from sidebar details
+            if sidebar_details:
+                if 'Nationality' in sidebar_details:
+                    info += f"Nationality: {sidebar_details['Nationality']}\n"
+                if 'Date of Birth' in sidebar_details:
+                    info += f"Date of Birth: {sidebar_details['Date of Birth']}\n"
+                if 'UCI ID' in sidebar_details:
+                    info += f"UCI ID: {sidebar_details['UCI ID']}\n"
+            
+            # Get results for current year
+            if hasattr(year_results, 'results_df') and not year_results.results_df.empty:
+                info += "\nRecent Results:\n"
+                results_count = min(5, len(year_results.results_df))
+                for i in range(results_count):
+                    row = year_results.results_df.iloc[i]
+                    date = row.get('Date', 'N/A')
+                    race = row.get('Race', 'N/A')
+                    pos = row.get('Pos', 'N/A')
+                    info += f"{i+1}. {date} - {race}: {pos}\n"
+            
+            # Add victories if available (just a count)
+            try:
+                victories = rider.victories(uci=True)
+                if hasattr(victories, 'results_df') and not victories.results_df.empty:
+                    info += f"\nUCI Victories: {len(victories.results_df)}\n"
+            except:
+                pass
+            
+            return info
+            
+        except Exception as parsing_error:
+            # If standard parsing method fails, use direct HTML parsing
+            # Get raw HTML for the rider page
+            url = f"https://firstcycling.com/rider.php?r={rider_id}"
+            response = requests.get(url)
+            
+            if response.status_code != 200:
+                return f"Failed to retrieve data for rider ID {rider_id}. Status code: {response.status_code}"
+            
+            # Parse the HTML
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Check if the page indicates the rider doesn't exist
+            if "not found" in soup.text.lower() or "no results found" in soup.text.lower():
+                return f"Rider ID {rider_id} does not exist on FirstCycling.com."
+            
+            # Build rider information string
+            info = ""
+            
+            # Get rider name from the heading
+            name_element = soup.find('h1')
+            if name_element:
+                rider_name = name_element.text.strip()
+                info += f"Name: {rider_name}\n"
+            else:
+                info += f"Rider ID: {rider_id}\n"
+            
+            # Get current team - typically in a div after the rider name
+            team_element = soup.find('span', class_='blue')
+            if team_element:
+                team_name = team_element.text.strip()
+                info += f"Team: {team_name}\n"
+            
+            # Try to find the sidebar details (nationality, birth date, etc.)
+            sidebar = soup.find('div', class_='rp-info')
+            if sidebar:
+                detail_rows = sidebar.find_all('tr')
+                for row in detail_rows:
+                    cells = row.find_all('td')
+                    if len(cells) >= 2:
+                        key = cells[0].text.strip().rstrip(':')
+                        value = cells[1].text.strip()
+                        if key and value:
+                            info += f"{key}: {value}\n"
+            
+            # Try to find recent results
+            tables = soup.find_all('table')
+            results_table = None
+            
+            # Look for a table that has race results
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')]
+                if len(headers) >= 3 and ('Date' in headers or 'Race' in headers):
+                    results_table = table
+                    break
+            
+            if results_table:
+                # Get the headers to identify column positions
+                headers = [th.text.strip() for th in results_table.find_all('th')]
+                date_idx = headers.index('Date') if 'Date' in headers else None
+                race_idx = headers.index('Race') if 'Race' in headers else None
+                pos_idx = headers.index('Pos') if 'Pos' in headers else None
+                
+                if date_idx is not None and race_idx is not None and pos_idx is not None:
+                    # Extract up to 5 recent results
+                    rows = results_table.find_all('tr')[1:6]  # Skip header row, take up to 5 rows
+                    
+                    if rows:
+                        info += "\nRecent Results:\n"
+                        for i, row in enumerate(rows):
+                            cells = row.find_all('td')
+                            if len(cells) > max(date_idx, race_idx, pos_idx):
+                                date = cells[date_idx].text.strip()
+                                race = cells[race_idx].text.strip()
+                                pos = cells[pos_idx].text.strip()
+                                info += f"{i+1}. {date} - {race}: {pos}\n"
+            
+            # Try to find victories count
+            # This can be tricky with direct parsing, often in a different section
+            victories_section = soup.find(text=lambda text: text and 'victories' in text.lower())
+            if victories_section:
+                # Try to extract the number from text like "X UCI victories"
+                victory_text = victories_section.strip()
+                victory_match = re.search(r'(\d+)\s+UCI\s+victories', victory_text, re.IGNORECASE)
+                if victory_match:
+                    victories_count = victory_match.group(1)
+                    info += f"\nUCI Victories: {victories_count}\n"
+            
+            return info
     except Exception as e:
         return f"Error retrieving rider information for ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
