@@ -2216,13 +2216,13 @@ async def get_race_edition_results(race_id: int, year: int, classification_num: 
 @mcp.tool(
     name="get_start_list",
     description="""Get the start list for a specific edition of a cycling race.
-    This tool provides a list of all riders and teams participating in a specific edition of a race.
     The start list includes rider numbers, names, and teams.
     
     Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    If no year is specified, the current year will be used.
     
     Example usage:
-    - Get start list for 2023 Tour de France (Race ID: 17, Year: 2023)
+    - Get start list for current year's Tour de France (Race ID: 17)
     - Get start list for 2023 Paris-Roubaix (Race ID: 30, Year: 2023)
     
     Returns a formatted string with:
@@ -2230,13 +2230,16 @@ async def get_race_edition_results(race_id: int, year: int, classification_num: 
     - List of participating teams
     - Riders for each team with their race numbers"""
 )
-async def get_start_list(race_id: int, year: int) -> str:
+async def get_start_list(race_id: int, year: int = None) -> str:
     """Get the start list for a specific edition of a cycling race.
 
     Args:
         race_id: The FirstCycling race ID
-        year: The year of the race edition
+        year: The year of the race edition (defaults to current year if not specified)
     """
+    if year is None:
+        year = datetime.now().year
+    
     try:
         # Create a race instance
         race = Race(race_id)
