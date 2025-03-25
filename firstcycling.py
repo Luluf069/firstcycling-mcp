@@ -22,6 +22,7 @@ from first_cycling_api.race.race import RaceEdition
 mcp = FastMCP("firstcycling")
 
 @mcp.tool(
+    name="get_rider_year_results",
     description="""Retrieve detailed results for a professional cyclist for a specific year.
     This tool provides comprehensive information about a rider's performance in all races during a given calendar year.
     It includes positions achieved, race categories, dates, and additional details.
@@ -155,6 +156,7 @@ async def get_rider_year_results(rider_id: int, year: int) -> str:
         return f"Error retrieving {year} results for rider ID {rider_id}: {str(e)}"
 
 @mcp.tool(
+    name="get_rider_victories",
     description="""Get a comprehensive list of a rider's UCI victories.
     This tool retrieves detailed information about all UCI-registered race victories achieved by the cyclist
     throughout their career. Victories can be filtered to show only WorldTour wins if desired.
@@ -323,6 +325,7 @@ async def get_rider_victories(rider_id: int, world_tour_only: bool = False) -> s
         return f"Error retrieving victories for rider ID {rider_id}: {str(e)}"
 
 @mcp.tool(
+    name="get_rider_teams",
     description="""Get a detailed history of a professional cyclist's team affiliations throughout their career.
     This tool provides a chronological list of all teams the rider has been part of, including years and team details.
     
@@ -466,6 +469,7 @@ async def get_rider_teams(rider_id: int) -> str:
         return f"Error retrieving team history for rider ID {rider_id}: {str(e)}"
 
 @mcp.tool(
+    name="search_rider",
     description="""Search for professional cyclists by name. This tool helps find riders by their name, 
     returning a list of matching riders with their IDs and basic information. This is useful when you need 
     a rider's ID for other operations but only know their name.
@@ -516,6 +520,7 @@ async def search_rider(query: str) -> str:
         return f"Error searching for riders: {str(e)}"
 
 @mcp.tool(
+    name="get_rider_info",
     description="""Get comprehensive information about a professional cyclist including their current team, nationality, date of birth, and recent race results. 
     This tool provides a detailed overview of a rider's current status and recent performance in professional cycling races. 
     The information includes their current team affiliation, nationality, age, and their most recent race results with positions and times.
@@ -708,6 +713,7 @@ async def get_rider_info(rider_id: int) -> str:
         return f"Error retrieving rider information for ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
 @mcp.tool(
+    name="get_rider_best_results",
     description="""Retrieve the best career results of a professional cyclist, including their top finishes in various races. 
     This tool provides a comprehensive overview of a rider's most significant achievements throughout their career, 
     including their highest positions in major races, stage wins, and overall classifications. 
@@ -792,6 +798,7 @@ async def get_rider_best_results(rider_id: int, limit: int = 10) -> str:
         return f"Error retrieving best results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
 @mcp.tool(
+    name="get_rider_grand_tour_results",
     description="""Get comprehensive results for a rider in Grand Tours (Tour de France, Giro d'Italia, and Vuelta a España). 
     This tool provides detailed information about a rider's performance in cycling's most prestigious three-week races, 
     including their overall classification positions, stage wins, and special classification results. 
@@ -977,6 +984,7 @@ async def get_rider_grand_tour_results(rider_id: int) -> str:
         return f"Error retrieving Grand Tour results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
 @mcp.tool(
+    name="get_rider_monument_results",
     description="""Retrieve detailed results for a rider in cycling's five Monument races (Milan-San Remo, Tour of Flanders, 
     Paris-Roubaix, Liège-Bastogne-Liège, and Il Lombardia). These are the most prestigious one-day races in professional cycling. 
     The tool provides comprehensive information about a rider's performance in these historic races, including their positions, 
@@ -1074,6 +1082,7 @@ async def get_rider_monument_results(rider_id: int) -> str:
         return f"Error retrieving Monument results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
 @mcp.tool(
+    name="get_rider_team_and_ranking",
     description="""Get information about a professional cyclist's team affiliations and UCI rankings throughout their career.
     This tool retrieves the rider's team history and their UCI ranking points over time. It provides a comprehensive
     overview of their professional career progression through different teams and their performance in the UCI rankings.
@@ -1230,6 +1239,7 @@ async def get_rider_team_and_ranking(rider_id: int) -> str:
         return f"An error occurred while getting team and ranking information for rider ID {rider_id}: {str(e)}"
 
 @mcp.tool(
+    name="get_rider_race_history",
     description="""Get the complete race history of a professional cyclist, optionally filtered by year.
     This tool retrieves a comprehensive list of all races the rider has participated in, including their
     positions, times, and race categories. It provides a detailed overview of their racing career.
@@ -1470,6 +1480,7 @@ async def get_rider_race_history(rider_id: int, year: int = None) -> str:
         return f"Error searching for riders: {str(e)}"
 
 @mcp.tool(
+    name="search_race",
     description="""Search for cycling races by name. This tool helps find races by their name, 
     returning a list of matching races with their IDs and countries. This is useful when you know 
     a race's name but need its ID for other operations.
@@ -1517,6 +1528,7 @@ async def search_race(query: str) -> str:
         return f"Error searching for races: {str(e)}"
 
 @mcp.tool(
+    name="get_rider_one_day_races",
     description="""Get a rider's results in one-day races, optionally filtered by year.
     This tool retrieves detailed information about a rider's performance in one-day races 
     (classics and one-day events). It provides comprehensive data about positions, times, 
@@ -1715,6 +1727,7 @@ async def get_rider_one_day_races(rider_id: int, year: int = None) -> str:
         return f"Error retrieving one-day race results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
 @mcp.tool(
+    name="get_rider_stage_races",
     description="""Get a rider's results in stage races, optionally filtered by year.
     This tool retrieves detailed information about a rider's performance in stage races
     (multi-day races like Tour de France, Giro d'Italia, etc.). It provides comprehensive data 
@@ -1912,12 +1925,8 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
     except Exception as e:
         return f"Error retrieving stage race results for rider ID {rider_id}: {str(e)}. The rider ID may not exist or there might be a connection issue."
 
-if __name__ == "__main__":
-    # Initialize and run the server
-    mcp.run(transport='stdio') 
-
-# Add race-specific tools at the end of the file
 @mcp.tool(
+    name="get_race_details",
     description="""Get comprehensive details about a cycling race.
     This tool provides detailed information about a specific race, including its history, key statistics,
     route details, and other relevant information. The data can be filtered by specific classification.
@@ -2058,6 +2067,7 @@ async def get_race_details(race_id: int, classification_num: int = None) -> str:
         return f"Error retrieving race details for race ID {race_id}: {str(e)}"
 
 @mcp.tool(
+    name="get_race_edition_results",
     description="""Get detailed results for a specific edition of a cycling race.
     This tool provides comprehensive results for a particular edition of a race, including rankings,
     time gaps, and other relevant statistics. Results can be filtered by classification or stage.
@@ -2204,6 +2214,7 @@ async def get_race_edition_results(race_id: int, year: int, classification_num: 
         return f"Error retrieving race results for race ID {race_id}, year {year}: {str(e)}"
 
 @mcp.tool(
+    name="get_start_list",
     description="""Get the start list for a specific edition of a cycling race.
     This tool provides a list of all riders and teams participating in a specific edition of a race.
     The start list includes rider numbers, names, and teams.
@@ -2309,6 +2320,7 @@ async def get_start_list(race_id: int, year: int) -> str:
         return f"Error retrieving start list for race ID {race_id}, year {year}: {str(e)}"
 
 @mcp.tool(
+    name="get_race_victory_table",
     description="""Get the all-time victory table for a cycling race.
     This tool provides a historical summary of the most successful riders in a specific race,
     showing the number of victories for each rider throughout the race's history.
@@ -2433,143 +2445,7 @@ async def get_race_victory_table(race_id: int) -> str:
         return f"Error retrieving victory table for race ID {race_id}: {str(e)}"
 
 @mcp.tool(
-    description="""Get stage profiles for a specific edition of a stage race.
-    This tool retrieves information about all stages in a multi-day race, including
-    distances, elevation profiles, and stage types.
-    
-    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
-    
-    Example usage:
-    - Get stage profiles for 2023 Tour de France (Race ID: 17, Year: 2023)
-    - Get stage profiles for 2023 Giro d'Italia (Race ID: 13, Year: 2023)
-    
-    Returns a formatted string with:
-    - Race name and year
-    - List of all stages
-    - Stage distance, type, and description
-    - Start and finish locations for each stage"""
-)
-async def get_race_stage_profiles(race_id: int, year: int) -> str:
-    """Get stage profiles for a specific edition of a stage race.
-
-    Args:
-        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
-        year: The year of the race edition (e.g., 2023)
-    """
-    try:
-        # Create a race instance
-        race = Race(race_id)
-        
-        # Get specific edition
-        race_edition = race.edition(year)
-        
-        # Get stage profiles
-        stage_profiles = race_edition.stage_profiles()
-        
-        # Build information string
-        info = ""
-        
-        # Check if we can parse the data
-        if not hasattr(stage_profiles, 'soup') or not stage_profiles.soup:
-            return f"No stage profiles found for race ID {race_id}, year {year}. This might not be a stage race or the profiles may not be available."
-        
-        soup = stage_profiles.soup
-        
-        # Extract race name from title
-        title = soup.find('title')
-        race_name = title.text.split('|')[0].strip() if title and '|' in title.text else f"Race ID {race_id}"
-        
-        info += f"{year} {race_name} - Stage Profiles:\n\n"
-        
-        # Check if we have a structured DataFrame
-        if hasattr(stage_profiles, 'stages_df') and not (stage_profiles.stages_df is None or stage_profiles.stages_df.empty):
-            # Use standard parsing with DataFrame
-            stages_df = stage_profiles.stages_df
-            
-            for _, row in stages_df.iterrows():
-                stage = row.get('Stage', 'N/A')
-                date = row.get('Date', 'N/A')
-                route = row.get('Route', 'N/A')
-                distance = row.get('Distance', 'N/A')
-                type_info = row.get('Type', '')
-                
-                info += f"Stage {stage} - {date}:\n"
-                info += f"  Route: {route}\n"
-                info += f"  Distance: {distance}\n"
-                if type_info:
-                    info += f"  Type: {type_info}\n"
-                
-                info += "\n"
-        else:
-            # Direct HTML parsing
-            # Find stage profiles table
-            stages_table = None
-            tables = soup.find_all('table')
-            
-            for table in tables:
-                headers = [th.text.strip() for th in table.find_all('th')]
-                if len(headers) >= 3 and any(keyword in ' '.join(headers).lower() 
-                                          for keyword in ['stage', 'date', 'route', 'distance']):
-                    stages_table = table
-                    break
-            
-            if not stages_table:
-                # Look for any table that might contain stage info
-                for table in tables:
-                    rows = table.find_all('tr')
-                    if len(rows) >= 3:  # Header + at least 2 data rows
-                        first_row_cells = rows[1].find_all('td')
-                        if len(first_row_cells) >= 3:
-                            # If first cell looks like stage number (short text)
-                            first_cell = first_row_cells[0].text.strip()
-                            if len(first_cell) <= 3 or "stage" in first_cell.lower():
-                                stages_table = table
-                                break
-            
-            if not stages_table:
-                return f"Could not find stage profiles table for race ID {race_id}, year {year}."
-            
-            # Parse stages data
-            rows = stages_table.find_all('tr')
-            if len(rows) <= 1:  # Only header row, no data
-                return f"No stage profiles found for race ID {race_id}, year {year}."
-            
-            # Get headers to determine column positions
-            headers = [th.text.strip() for th in rows[0].find_all('th')] if rows[0].find_all('th') else []
-            
-            # Find column indices
-            stage_idx = next((i for i, h in enumerate(headers) if "Stage" in h), 0)
-            date_idx = next((i for i, h in enumerate(headers) if "Date" in h), 1)
-            route_idx = next((i for i, h in enumerate(headers) if "Route" in h), 2)
-            distance_idx = next((i for i, h in enumerate(headers) if "Distance" in h or "Km" in h), 3)
-            type_idx = next((i for i, h in enumerate(headers) if "Type" in h), None)
-            
-            # Skip header row
-            for row in rows[1:]:
-                cols = row.find_all('td')
-                if len(cols) < 3:  # Ensure it's a data row
-                    continue
-                
-                # Extract data
-                stage = cols[stage_idx].text.strip() if stage_idx < len(cols) else "N/A"
-                date = cols[date_idx].text.strip() if date_idx < len(cols) else "N/A"
-                route = cols[route_idx].text.strip() if route_idx < len(cols) else "N/A"
-                distance = cols[distance_idx].text.strip() if distance_idx < len(cols) else "N/A"
-                type_info = cols[type_idx].text.strip() if type_idx is not None and type_idx < len(cols) else ""
-                
-                info += f"Stage {stage} - {date}:\n"
-                info += f"  Route: {route}\n"
-                info += f"  Distance: {distance}\n"
-                if type_info:
-                    info += f"  Type: {type_info}\n"
-                
-                info += "\n"
-        
-        return info
-    except Exception as e:
-        return f"Error retrieving stage profiles for race ID {race_id}, year {year}: {str(e)}"
-
-@mcp.tool(
+    name="get_uci_rankings",
     description="""Get UCI rankings for riders, teams, or nations.
     This tool provides access to the UCI ranking data for professional cyclists, teams, or nations.
     Results can be filtered by ranking type, year, and category.
@@ -2760,3 +2636,7 @@ async def get_uci_rankings(rank_type: str = "riders", category: str = "world", y
         return info
     except Exception as e:
         return f"Error retrieving UCI rankings: {str(e)}"
+
+if __name__ == "__main__":
+    # Initialize and run the server
+    mcp.run(transport='stdio') 
