@@ -12,6 +12,38 @@ This MCP server offers rich access to professional cycling data, providing tools
 - Analyzing rider performance and career progression
 - Accessing information about cycling teams and competitions
 
+## Real-World Use Cases
+
+With this MCP server, you can use Claude to:
+
+### Rider Analysis
+
+- **Performance Tracking**: "How has Tadej Pogačar performed in the Tour de France over the years?"
+- **Career Progression**: "Show me the team history and career progression of Wout van Aert."
+- **Specialization Analysis**: "What are Mathieu van der Poel's results in Monument classics?"
+- **Victory Analysis**: "List all WorldTour victories for Jonas Vingegaard."
+- **Historical Comparison**: "Compare the Grand Tour results of Primož Roglič and Jonas Vingegaard."
+
+### Race Research
+
+- **Recent Results**: "Show me the results of the 2023 Paris-Roubaix."
+- **Historical Context**: "Who are the youngest and oldest winners of the Tour of Flanders?"
+- **Team Analysis**: "Get the startlist for the 2023 Tour de France with detailed team information."
+- **Race Statistics**: "Show me the victory table for Liège-Bastogne-Liège. Who has won it the most times?"
+- **Stage Information**: "Can you show me the stage profiles for the 2023 Giro d'Italia?"
+
+### Sports Journalism
+
+- "Create a detailed profile of Remco Evenepoel for a cycling magazine article."
+- "Write a preview for the upcoming Tour de France based on the recent results of top contenders like Tadej Pogačar and Jonas Vingegaard."
+- "Analyze the evolution of Tom Pidcock's career based on his race results and team history."
+
+### Cycling Education
+
+- "Explain what makes the Monument classics special using data about their history and winners."
+- "Create an educational summary about Grand Tours and their significance in professional cycling."
+- "Describe the typical career progression of a professional cyclist using examples from the data."
+
 ## Requirements
 
 - Python 3.10 or higher
@@ -115,38 +147,6 @@ To integrate this server with Claude for Desktop:
    ```
 
 3. Restart Claude for Desktop
-
-## Real-World Use Cases
-
-With this MCP server, you can use Claude to:
-
-### Rider Analysis
-
-- **Performance Tracking**: "How has Tadej Pogačar performed in the Tour de France over the years?"
-- **Career Progression**: "Show me the team history and career progression of Wout van Aert."
-- **Specialization Analysis**: "What are Mathieu van der Poel's results in Monument classics?"
-- **Victory Analysis**: "List all WorldTour victories for Jonas Vingegaard."
-- **Historical Comparison**: "Compare the Grand Tour results of Primož Roglič and Jonas Vingegaard."
-
-### Race Research
-
-- **Recent Results**: "Show me the results of the 2023 Paris-Roubaix."
-- **Historical Context**: "Who are the youngest and oldest winners of the Tour of Flanders?"
-- **Team Analysis**: "Get the startlist for the 2023 Tour de France with detailed team information."
-- **Race Statistics**: "Show me the victory table for Liège-Bastogne-Liège. Who has won it the most times?"
-- **Stage Information**: "Can you show me the stage profiles for the 2023 Giro d'Italia?"
-
-### Sports Journalism
-
-- "Create a detailed profile of Remco Evenepoel for a cycling magazine article."
-- "Write a preview for the upcoming Tour de France based on the recent results of top contenders like Tadej Pogačar and Jonas Vingegaard."
-- "Analyze the evolution of Tom Pidcock's career based on his race results and team history."
-
-### Cycling Education
-
-- "Explain what makes the Monument classics special using data about their history and winners."
-- "Create an educational summary about Grand Tours and their significance in professional cycling."
-- "Describe the typical career progression of a professional cyclist using examples from the data."
 
 ## License
 
