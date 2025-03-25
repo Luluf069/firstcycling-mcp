@@ -2204,30 +2204,27 @@ async def get_race_edition_results(race_id: int, year: int, classification_num: 
         return f"Error retrieving race results for race ID {race_id}, year {year}: {str(e)}"
 
 @mcp.tool(
-    description="""Get the startlist for a specific edition of a cycling race.
+    description="""Get the start list for a specific edition of a cycling race.
     This tool provides a list of all riders and teams participating in a specific edition of a race.
-    The startlist can be retrieved in either standard or extended format, with the extended format
-    providing additional details about riders.
+    The start list includes rider numbers, names, and teams.
     
     Note: If you don't know the race's ID, use the search_race tool first to find it by name.
     
     Example usage:
-    - Get startlist for 2023 Tour de France (Race ID: 17, Year: 2023)
-    - Get extended startlist for 2023 Paris-Roubaix (Race ID: 30, Year: 2023)
+    - Get start list for 2023 Tour de France (Race ID: 17, Year: 2023)
+    - Get start list for 2023 Paris-Roubaix (Race ID: 30, Year: 2023)
     
     Returns a formatted string with:
     - Race name and year
     - List of participating teams
-    - Riders for each team
-    - Additional rider details in extended format (optional)"""
+    - Riders for each team with their race numbers"""
 )
-async def get_race_startlist(race_id: int, year: int, extended: bool = False) -> str:
-    """Get the startlist for a specific edition of a cycling race.
+async def get_start_list(race_id: int, year: int) -> str:
+    """Get the start list for a specific edition of a cycling race.
 
     Args:
-        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
-        year: The year of the race edition (e.g., 2023)
-        extended: Whether to retrieve the extended startlist with additional rider details
+        race_id: The FirstCycling race ID
+        year: The year of the race edition
     """
     try:
         # Create a race instance
@@ -2236,178 +2233,80 @@ async def get_race_startlist(race_id: int, year: int, extended: bool = False) ->
         # Get specific edition
         race_edition = race.edition(year)
         
-        # Get startlist (standard or extended)
-        if extended:
-            startlist = race_edition.startlist_extended()
-        else:
-            startlist = race_edition.startlist()
+        # Get start list
+        start_list = race_edition.startlist()
         
         # Build information string
         info = ""
         
         # Check if we can parse the data
-        if not hasattr(startlist, 'soup') or not startlist.soup:
-            return f"No startlist found for race ID {race_id}, year {year}. The race may not have a published startlist yet."
+        if not hasattr(start_list, 'soup') or not start_list.soup:
+            return f"No start list found for race ID {race_id}, year {year}. The race may not have a published start list yet."
         
-        soup = startlist.soup
+        soup = start_list.soup
         
         # Extract race name from title
         title = soup.find('title')
         race_name = title.text.split('|')[0].strip() if title and '|' in title.text else f"Race ID {race_id}"
         
-        # Format title based on startlist type
-        if extended:
-            info += f"{year} {race_name} - Extended Startlist:\n\n"
-        else:
-            info += f"{year} {race_name} - Startlist:\n\n"
+        # Add header
+        info += f"{year} {race_name} - Start List:\n\n"
         
-        # Check if we have a structured DataFrame
-        if hasattr(startlist, 'startlist_df') and not (startlist.startlist_df is None or startlist.startlist_df.empty):
-            # Use standard parsing with DataFrame
-            startlist_df = startlist.startlist_df
-            
-            # Group by team
-            teams = startlist_df['Team'].unique()
-            
-            for team in teams:
-                info += f"{team}:\n"
+        # Find all team tables
+        team_tables = soup.find_all('table', {'class': 'tablesorter'})
+        if not team_tables:
+            return f"No start list tables found for race ID {race_id}, year {year}."
+        
+        # Process each team table
+        for table in team_tables:
+            # Get team name from header
+            team_header = table.find('th')
+            if not team_header:
+                continue
                 
-                # Get riders for this team
-                team_riders = startlist_df[startlist_df['Team'] == team]
+            # Extract team name from the link
+            team_link = team_header.find('a')
+            if not team_link:
+                continue
                 
-                for _, rider in team_riders.iterrows():
-                    number = rider.get('Number', '')
-                    name = rider.get('Rider', 'Unknown Rider')
+            team_name = team_link.text.strip()
+            info += f"\n{team_name}:\n"
+            
+            # Process riders
+            for row in table.find('tbody').find_all('tr'):
+                cols = row.find_all('td')
+                if len(cols) < 2:  # Should have number and rider name
+                    continue
                     
-                    # Add additional info for extended startlist
-                    if extended and 'Age' in rider:
-                        age = rider.get('Age', '')
-                        uci_points = rider.get('UCI Points', '')
-                        result_line = f"  {number} {name}"
-                        if age:
-                            result_line += f" (Age: {age}"
-                            if uci_points:
-                                result_line += f", UCI Points: {uci_points})"
-                            else:
-                                result_line += ")"
-                    else:
-                        result_line = f"  {number} {name}"
-                    
-                    info += result_line + "\n"
+                number = cols[0].text.strip()
+                rider_link = cols[1].find('a')
                 
-                info += "\n"
-        else:
-            # Direct HTML parsing
-            # Find startlist table(s)
-            startlist_tables = []
-            tables = soup.find_all('table')
-            
-            for table in tables:
-                # Look for tables that might contain startlist info
-                if table.find('th'):  # Must have header row
-                    headers = [th.text.strip() for th in table.find_all('th')]
-                    if any(header in headers for header in ['Rider', 'Team']):
-                        startlist_tables.append(table)
-            
-            if not startlist_tables:
-                return f"Could not find startlist table for race ID {race_id}, year {year}."
-            
-            # If we have team-based startlists (common format)
-            team_headings = soup.find_all(['h2', 'h3', 'h4'])
-            team_based = False
-            
-            for heading in team_headings:
-                next_table = heading.find_next('table')
-                if next_table:
-                    team_based = True
-                    team_name = heading.text.strip()
-                    info += f"{team_name}:\n"
+                if not rider_link:
+                    continue
                     
-                    # Parse riders from table
-                    rows = next_table.find_all('tr')
-                    for row in rows[1:]:  # Skip header row
-                        cols = row.find_all('td')
-                        if len(cols) < 2:
-                            continue
-                        
-                        # Extract rider info (format varies)
-                        if len(cols) >= 3:
-                            number = cols[0].text.strip()
-                            name = cols[1].text.strip()
-                            
-                            result_line = f"  {number} {name}"
-                            
-                            # Add additional info for extended startlist
-                            if extended and len(cols) >= 4:
-                                additional_info = []
-                                for i in range(3, min(6, len(cols))):
-                                    info_text = cols[i].text.strip()
-                                    if info_text:
-                                        additional_info.append(info_text)
-                                
-                                if additional_info:
-                                    result_line += f" ({', '.join(additional_info)})"
-                        else:
-                            # Simplified format
-                            result_line = f"  {cols[0].text.strip()}"
-                        
-                        info += result_line + "\n"
-                    
-                    info += "\n"
-            
-            # If not team-based, process each table directly
-            if not team_based:
-                for table in startlist_tables:
-                    rows = table.find_all('tr')
-                    
-                    # Get column indices
-                    headers = [th.text.strip() for th in rows[0].find_all('th')] if rows[0].find_all('th') else []
-                    
-                    # Find column indices
-                    team_idx = next((i for i, h in enumerate(headers) if "Team" in h), None)
-                    number_idx = next((i for i, h in enumerate(headers) if "Nr" in h or "Number" in h), 0)
-                    rider_idx = next((i for i, h in enumerate(headers) if "Rider" in h), 1)
-                    
-                    # Process the table
-                    current_team = ""
-                    
-                    for row in rows[1:]:  # Skip header row
-                        cols = row.find_all('td')
-                        if len(cols) < 2:
-                            continue
-                        
-                        # Check if this is a team row or rider row
-                        if team_idx is not None and team_idx < len(cols):
-                            team_text = cols[team_idx].text.strip()
-                            if team_text and team_text != current_team:
-                                current_team = team_text
-                                info += f"{current_team}:\n"
-                        
-                        # Extract rider info
-                        number = cols[number_idx].text.strip() if number_idx < len(cols) else ""
-                        rider = cols[rider_idx].text.strip() if rider_idx < len(cols) else "Unknown Rider"
-                        
-                        # Add additional info for extended startlist
-                        if extended and len(cols) >= 4:
-                            additional_info = []
-                            for i in range(3, min(6, len(cols))):
-                                info_text = cols[i].text.strip()
-                                if info_text:
-                                    additional_info.append(info_text)
-                            
-                            result_line = f"  {number} {rider}"
-                            if additional_info:
-                                result_line += f" ({', '.join(additional_info)})"
-                        else:
-                            result_line = f"  {number} {rider}"
-                        
-                        info += result_line + "\n"
-                    
-                    info += "\n"
+                # Check if rider is crossed out (not starting)
+                is_not_starting = 'text-decoration:line-through' in rider_link.get('style', '')
+                
+                # Get rider name parts (last name in uppercase, first name in small tag)
+                last_name = rider_link.find(text=True, recursive=False).strip()
+                first_name = rider_link.find('span', class_='small')
+                first_name = first_name.text.strip() if first_name else ''
+                
+                # Get nationality
+                flag = cols[1].find('span', class_=lambda x: x and x.startswith('flag flag-'))
+                nationality = flag['class'][1].replace('flag-', '').upper() if flag else ''
+                
+                # Format rider line
+                rider_line = f"{number}. {last_name} {first_name}"
+                if nationality:
+                    rider_line += f" ({nationality})"
+                if is_not_starting:
+                    rider_line += " [NOT STARTING]"
+                info += rider_line + "\n"
         
         return info
     except Exception as e:
-        return f"Error retrieving startlist for race ID {race_id}, year {year}: {str(e)}"
+        return f"Error retrieving start list for race ID {race_id}, year {year}: {str(e)}"
 
 @mcp.tool(
     description="""Get the all-time victory table for a cycling race.
