@@ -82,3 +82,8 @@ docs/build/
 .coverage
 htmlcov/
 .tox/
+
+# Cursor rules
+.cursor/
+.cursor-rules-context
+.cursor_rules_context.md
