@@ -2302,10 +2302,15 @@ async def get_start_list(race_id: int, year: int = None) -> str:
                 is_not_starting = 'text-decoration:line-through' in rider_link.get('style', '')
                 
                 # Get rider name parts (last name in uppercase, first name in small tag)
-                last_name = rider_link.find(text=True, recursive=False)
-                last_name = last_name.strip() if last_name else ''
+                last_name = rider_link.text
                 first_name_tag = rider_link.find('span', class_='small')
-                first_name = first_name_tag.text.strip() if first_name_tag else ''
+                if first_name_tag:
+                    # Remove the first name part from the full text to get the last name
+                    last_name = last_name.replace(first_name_tag.text, '').strip()
+                    first_name = first_name_tag.text.strip()
+                else:
+                    first_name = ''
+                    last_name = last_name.strip()
                 
                 # Get nationality
                 flag = cols[1].find('span', class_=lambda x: x and x.startswith('flag flag-'))
