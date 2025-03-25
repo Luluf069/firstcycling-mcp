@@ -22,6 +22,450 @@ from first_cycling_api.race.race import RaceEdition
 mcp = FastMCP("firstcycling")
 
 @mcp.tool(
+    description="""Retrieve detailed results for a professional cyclist for a specific year.
+    This tool provides comprehensive information about a rider's performance in all races during a given calendar year.
+    It includes positions achieved, race categories, dates, and additional details.
+    
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
+    Example usage:
+    - Get 2023 results for Tadej Pogačar (ID: 16973)
+    - Get 2022 results for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Complete results for the specified year
+    - Position and time for each race
+    - Race category and details
+    - Chronological organization by date"""
+)
+async def get_rider_year_results(rider_id: int, year: int) -> str:
+    """Get detailed results for a professional cyclist for a specific year.
+
+    Args:
+        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
+        year: The year to get results for (e.g., 2023)
+    """
+    try:
+        # Create a rider instance
+        rider = Rider(rider_id)
+        
+        # Get year results
+        year_results = rider.year_results(year)
+        
+        # Build information string
+        info = ""
+        
+        # Get rider name
+        rider_name = None
+        if hasattr(year_results, 'header_details') and year_results.header_details:
+            if 'name' in year_results.header_details:
+                rider_name = year_results.header_details['name']
+            else:
+                # Try to find name in soup
+                if hasattr(year_results, 'soup') and year_results.soup:
+                    name_element = year_results.soup.find('h1')
+                    if name_element:
+                        rider_name = name_element.text.strip()
+        
+        # Format title
+        if rider_name:
+            info += f"{year} Results for {rider_name}:\n\n"
+        else:
+            info += f"{year} Results for Rider ID {rider_id}:\n\n"
+        
+        # Check if we need to use standard parsing or direct HTML parsing
+        if hasattr(year_results, 'results_df') and not (year_results.results_df is None or year_results.results_df.empty):
+            # Use standard parsing
+            results_df = year_results.results_df
+            
+            # Sort by date
+            if 'Date' in results_df.columns:
+                results_df = results_df.sort_values('Date')
+            
+            for _, row in results_df.iterrows():
+                date = row.get('Date', 'N/A')
+                race = row.get('Race', 'N/A')
+                pos = row.get('Pos', 'N/A')
+                category = row.get('CAT', 'N/A')
+                
+                result_line = f"{date} - {race}"
+                if category and category != 'N/A':
+                    result_line += f" ({category})"
+                result_line += f": {pos}"
+                
+                info += result_line + "\n"
+        else:
+            # Direct HTML parsing
+            if not hasattr(year_results, 'soup') or not year_results.soup:
+                return f"No results found for rider ID {rider_id} in year {year}. This rider ID may not exist or the rider didn't compete this year."
+            
+            soup = year_results.soup
+            
+            # Find results table
+            results_table = None
+            tables = soup.find_all('table')
+            
+            # Look for the appropriate table that contains race results
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')]
+                if len(headers) >= 3 and any(keyword in ' '.join(headers).lower() 
+                                           for keyword in ['date', 'race', 'result', 'position']):
+                    results_table = table
+                    break
+            
+            if not results_table:
+                return f"No results table found for rider ID {rider_id} in year {year}. The rider may not have competed this year."
+            
+            # Parse results data
+            rows = results_table.find_all('tr')
+            if len(rows) <= 1:  # Only header row, no data
+                return f"No race results found for rider ID {rider_id} in year {year}."
+            
+            # Skip header row
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) < 3:  # Ensure it's a data row
+                    continue
+                
+                # Extract data (positions may vary depending on table structure)
+                date = cols[0].text.strip() if len(cols) > 0 else "N/A"
+                race = cols[1].text.strip() if len(cols) > 1 else "N/A"
+                pos = cols[2].text.strip() if len(cols) > 2 else "N/A"
+                
+                # Try to find category if available
+                category = "N/A"
+                for i in range(3, min(6, len(cols))):  # Check a few columns for possible category
+                    col_text = cols[i].text.strip()
+                    if col_text and len(col_text) <= 5 and any(c in col_text for c in [".", "WT", "1", "2"]):
+                        category = col_text
+                        break
+                
+                result_line = f"{date} - {race}"
+                if category and category != 'N/A':
+                    result_line += f" ({category})"
+                result_line += f": {pos}"
+                
+                info += result_line + "\n"
+        
+        if not info.endswith("\n\n"):
+            info += "\n"
+            
+        return info
+    except Exception as e:
+        return f"Error retrieving {year} results for rider ID {rider_id}: {str(e)}"
+
+@mcp.tool(
+    description="""Get a comprehensive list of a rider's UCI victories.
+    This tool retrieves detailed information about all UCI-registered race victories achieved by the cyclist
+    throughout their career. Victories can be filtered to show only WorldTour wins if desired.
+    
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
+    Example usage:
+    - Get all UCI victories for Tadej Pogačar (ID: 16973)
+    - Get WorldTour victories for Jonas Vingegaard (ID: 16974)
+    
+    Returns a formatted string with:
+    - Complete list of victories
+    - Race details including category
+    - Date and year of each victory
+    - Option to filter by WorldTour races only"""
+)
+async def get_rider_victories(rider_id: int, world_tour_only: bool = False) -> str:
+    """Get a comprehensive list of a rider's UCI victories.
+
+    Args:
+        rider_id: The FirstCycling rider ID (e.g., 16973 for Tadej Pogačar)
+        world_tour_only: If True, only shows WorldTour victories
+    """
+    try:
+        # Create a rider instance
+        rider = Rider(rider_id)
+        
+        # Get victories (UCI victories by default)
+        victories = rider.victories(world_tour=world_tour_only, uci=True)
+        
+        # Build information string
+        info = ""
+        
+        # Get rider name
+        rider_name = None
+        if hasattr(victories, 'header_details') and victories.header_details:
+            if 'name' in victories.header_details:
+                rider_name = victories.header_details['name']
+            else:
+                # Try to find name in soup
+                if hasattr(victories, 'soup') and victories.soup:
+                    name_element = victories.soup.find('h1')
+                    if name_element:
+                        rider_name = name_element.text.strip()
+        
+        # Format title based on filter
+        if rider_name:
+            if world_tour_only:
+                info += f"WorldTour Victories for {rider_name}:\n\n"
+            else:
+                info += f"UCI Victories for {rider_name}:\n\n"
+        else:
+            if world_tour_only:
+                info += f"WorldTour Victories for Rider ID {rider_id}:\n\n"
+            else:
+                info += f"UCI Victories for Rider ID {rider_id}:\n\n"
+        
+        # Check if we need to use standard parsing or direct HTML parsing
+        if hasattr(victories, 'results_df') and not (victories.results_df is None or victories.results_df.empty):
+            # Use standard parsing
+            results_df = victories.results_df
+            
+            # Group by year
+            results_df = results_df.sort_values('Year', ascending=False)
+            
+            for year in results_df['Year'].unique():
+                year_data = results_df[results_df['Year'] == year]
+                info += f"{year}:\n"
+                
+                for _, row in year_data.iterrows():
+                    date = row.get('Date', 'N/A')
+                    race = row.get('Race', 'N/A')
+                    category = row.get('CAT', 'N/A')
+                    
+                    result_line = f"  {date} - {race}"
+                    if category and category != 'N/A':
+                        result_line += f" ({category})"
+                    
+                    info += result_line + "\n"
+                
+                info += "\n"
+        else:
+            # Direct HTML parsing
+            if not hasattr(victories, 'soup') or not victories.soup:
+                return f"No victories data found for rider ID {rider_id}. This rider ID may not exist or has no recorded victories."
+            
+            soup = victories.soup
+            
+            # Find victories table
+            victories_table = None
+            tables = soup.find_all('table')
+            
+            # Look for the appropriate table that contains victories
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')] if table.find_all('th') else []
+                if len(headers) >= 3 and any(keyword in ' '.join(headers).lower() 
+                                           for keyword in ['date', 'race', 'year']):
+                    victories_table = table
+                    break
+            
+            if not victories_table:
+                return f"No victories table found for rider ID {rider_id}. The rider may not have any recorded victories."
+            
+            # Parse victories data
+            rows = victories_table.find_all('tr')
+            if len(rows) <= 1:  # Only header row, no data
+                return f"No victories found for rider ID {rider_id}."
+            
+            # Get headers to determine column positions
+            headers = [th.text.strip() for th in rows[0].find_all('th')] if rows[0].find_all('th') else []
+            
+            # Find column indices
+            year_idx = next((i for i, h in enumerate(headers) if "Year" in h), None)
+            date_idx = next((i for i, h in enumerate(headers) if "Date" in h), None)
+            race_idx = next((i for i, h in enumerate(headers) if "Race" in h), 1)  # Default to second column
+            cat_idx = next((i for i, h in enumerate(headers) if "CAT" in h), None)
+            
+            # Extract and organize victories by year
+            victories_by_year = {}
+            
+            # Skip header row
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) < 3:  # Ensure it's a data row
+                    continue
+                
+                # Extract data
+                year = cols[year_idx].text.strip() if year_idx is not None and year_idx < len(cols) else "Unknown"
+                date = cols[date_idx].text.strip() if date_idx is not None and date_idx < len(cols) else "N/A"
+                race = cols[race_idx].text.strip() if race_idx is not None and race_idx < len(cols) else cols[1].text.strip()
+                category = cols[cat_idx].text.strip() if cat_idx is not None and cat_idx < len(cols) else "N/A"
+                
+                # If year not found in date column, try to extract from date
+                if year == "Unknown" and date != "N/A":
+                    year_match = re.search(r'(\d{4})', date)
+                    if year_match:
+                        year = year_match.group(1)
+                
+                if year not in victories_by_year:
+                    victories_by_year[year] = []
+                
+                victories_by_year[year].append({
+                    'date': date,
+                    'race': race,
+                    'category': category
+                })
+            
+            # Sort years in descending order and format output
+            for year in sorted(victories_by_year.keys(), reverse=True):
+                info += f"{year}:\n"
+                
+                for victory in victories_by_year[year]:
+                    result_line = f"  {victory['date']} - {victory['race']}"
+                    if victory['category'] and victory['category'] != 'N/A':
+                        result_line += f" ({victory['category']})"
+                    
+                    info += result_line + "\n"
+                
+                info += "\n"
+            
+            if not victories_by_year:
+                info += "No victories found.\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving victories for rider ID {rider_id}: {str(e)}"
+
+@mcp.tool(
+    description="""Get a detailed history of a professional cyclist's team affiliations throughout their career.
+    This tool provides a chronological list of all teams the rider has been part of, including years and team details.
+    
+    Note: If you don't know the rider's ID, use the search_rider tool first to find it by name.
+    
+    Example usage:
+    - Get team history for Peter Sagan (ID: 12345)
+    - Get career team changes for Chris Froome (ID: 67890)
+    
+    Returns a formatted string with:
+    - Complete team history
+    - Years with each team
+    - Team names and details
+    - Chronological organization"""
+)
+async def get_rider_teams(rider_id: int) -> str:
+    """Get a detailed history of a professional cyclist's team affiliations throughout their career.
+
+    Args:
+        rider_id: The FirstCycling rider ID (e.g., 12345 for Peter Sagan)
+    """
+    try:
+        # Create a rider instance
+        rider = Rider(rider_id)
+        
+        # Get teams history
+        teams_history = rider.teams()
+        
+        # Build information string
+        info = ""
+        
+        # Get rider name
+        rider_name = None
+        if hasattr(teams_history, 'header_details') and teams_history.header_details:
+            if 'name' in teams_history.header_details:
+                rider_name = teams_history.header_details['name']
+            else:
+                # Try to find name in soup
+                if hasattr(teams_history, 'soup') and teams_history.soup:
+                    name_element = teams_history.soup.find('h1')
+                    if name_element:
+                        rider_name = name_element.text.strip()
+        
+        # Format title
+        if rider_name:
+            info += f"Team History for {rider_name}:\n\n"
+        else:
+            info += f"Team History for Rider ID {rider_id}:\n\n"
+        
+        # Check if we need to use standard parsing or direct HTML parsing
+        if hasattr(teams_history, 'results_df') and not (teams_history.results_df is None or teams_history.results_df.empty):
+            # Use standard parsing
+            results_df = teams_history.results_df
+            
+            # Sort by year (most recent first)
+            results_df = results_df.sort_values('Year', ascending=False)
+            
+            for _, row in results_df.iterrows():
+                year = row.get('Year', 'N/A')
+                team = row.get('Team', 'N/A')
+                
+                info += f"{year}: {team}\n"
+        else:
+            # Direct HTML parsing
+            if not hasattr(teams_history, 'soup') or not teams_history.soup:
+                return f"No team history found for rider ID {rider_id}. This rider ID may not exist."
+            
+            soup = teams_history.soup
+            
+            # Find teams table
+            teams_table = None
+            tables = soup.find_all('table')
+            
+            # Look for the appropriate table that contains team history
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')] if table.find_all('th') else []
+                if len(headers) >= 2 and any(keyword in ' '.join(headers).lower() 
+                                           for keyword in ['year', 'team', 'season']):
+                    teams_table = table
+                    break
+            
+            if not teams_table:
+                # Try to find any table that might contain years and teams
+                for table in tables:
+                    rows = table.find_all('tr')
+                    if len(rows) >= 2:  # At least a header and one data row
+                        # Check first data row for year-like and team-like content
+                        cols = rows[1].find_all('td')
+                        if len(cols) >= 2:
+                            # Check if first column contains a year
+                            if re.match(r'\d{4}', cols[0].text.strip()):
+                                teams_table = table
+                                break
+            
+            if not teams_table:
+                return f"No team history table found for rider ID {rider_id}."
+            
+            # Parse teams data
+            rows = teams_table.find_all('tr')
+            if len(rows) <= 1:  # Only header row, no data
+                return f"No team history found for rider ID {rider_id}."
+            
+            # Get headers to determine column positions
+            headers = [th.text.strip() for th in rows[0].find_all('th')] if rows[0].find_all('th') else []
+            
+            # Find column indices
+            year_idx = next((i for i, h in enumerate(headers) if "Year" in h), 0)  # Default to first column
+            team_idx = next((i for i, h in enumerate(headers) if "Team" in h), 1)  # Default to second column
+            
+            # Extract teams by year
+            teams_by_year = []
+            
+            # Skip header row
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) < 2:  # Ensure it's a data row
+                    continue
+                
+                # Extract data
+                year = cols[year_idx].text.strip() if year_idx < len(cols) else "Unknown"
+                team = cols[team_idx].text.strip() if team_idx < len(cols) else cols[1].text.strip()
+                
+                # Sanitize data
+                if year and team:
+                    teams_by_year.append({
+                        'year': year,
+                        'team': team
+                    })
+            
+            # Sort years in descending order and format output
+            teams_by_year.sort(key=lambda x: x['year'], reverse=True)
+            
+            for team_entry in teams_by_year:
+                info += f"{team_entry['year']}: {team_entry['team']}\n"
+            
+            if not teams_by_year:
+                info += "No team history found.\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving team history for rider ID {rider_id}: {str(e)}"
+
+@mcp.tool(
     description="""Search for professional cyclists by name. This tool helps find riders by their name, 
     returning a list of matching riders with their IDs and basic information. This is useful when you need 
     a rider's ID for other operations but only know their name.
@@ -1471,3 +1915,949 @@ async def get_rider_stage_races(rider_id: int, year: int = None) -> str:
 if __name__ == "__main__":
     # Initialize and run the server
     mcp.run(transport='stdio') 
+
+# Add race-specific tools at the end of the file
+@mcp.tool(
+    description="""Get comprehensive details about a cycling race.
+    This tool provides detailed information about a specific race, including its history, key statistics,
+    route details, and other relevant information. The data can be filtered by specific classification.
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
+    Example usage:
+    - Get details for Tour de France (ID: 17)
+    - Get details for Paris-Roubaix (ID: 30)
+    
+    Returns a formatted string with:
+    - Race name, country, and category
+    - Historical information and key statistics
+    - Course details and characteristics
+    - Optional classification details"""
+)
+async def get_race_details(race_id: int, classification_num: int = None) -> str:
+    """Get comprehensive details about a cycling race.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+        classification_num: Optional parameter to specify the classification (e.g., 1 for General Classification)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get race overview
+        race_overview = race.overview(classification_num)
+        
+        # Build information string
+        info = ""
+        
+        # Check if we can parse the data
+        if not hasattr(race_overview, 'soup') or not race_overview.soup:
+            return f"No race details found for race ID {race_id}. This race ID may not exist."
+        
+        soup = race_overview.soup
+        
+        # Extract race name from title
+        title = soup.find('title')
+        race_name = title.text.split('|')[0].strip() if title and '|' in title.text else f"Race ID {race_id}"
+        
+        info += f"Race Details for {race_name}:\n\n"
+        
+        # Extract basic information
+        basic_info = {}
+        
+        # Look for tables with race info
+        tables = soup.find_all('table')
+        info_table = None
+        
+        for table in tables:
+            if 'class' in table.attrs and 'basic' in table['class']:
+                info_table = table
+                break
+        
+        if info_table:
+            rows = info_table.find_all('tr')
+            for row in rows:
+                cols = row.find_all('td')
+                if len(cols) >= 2:
+                    key = cols[0].text.strip().rstrip(':')
+                    value = cols[1].text.strip()
+                    if key and value:
+                        basic_info[key] = value
+        
+        # Format basic information
+        if basic_info:
+            info += "Basic Information:\n"
+            for key, value in basic_info.items():
+                info += f"  {key}: {value}\n"
+            info += "\n"
+        
+        # Look for course/race description
+        description_div = soup.find('div', class_='w3-padding')
+        if description_div:
+            description_text = description_div.text.strip()
+            if description_text:
+                info += "Description:\n"
+                info += f"  {description_text}\n\n"
+        
+        # Look for winners/podium information
+        winners_table = None
+        
+        for table in tables:
+            headers = [th.text.strip() for th in table.find_all('th')]
+            if len(headers) >= 2 and ("Year" in headers or "Edition" in headers) and "Winner" in headers:
+                winners_table = table
+                break
+        
+        if winners_table:
+            info += "Recent Winners:\n"
+            
+            rows = winners_table.find_all('tr')
+            # Skip header row
+            for i, row in enumerate(rows[1:]):
+                if i >= 5:  # Limit to last 5 winners
+                    break
+                    
+                cols = row.find_all('td')
+                if len(cols) >= 2:
+                    year = cols[0].text.strip()
+                    winner = cols[1].text.strip()
+                    
+                    info += f"  {year}: {winner}\n"
+            
+            info += "\n"
+        
+        # If standard parsing doesn't work, try direct HTML parsing
+        if not basic_info and not description_div and not winners_table:
+            # Look for any useful information
+            paragraphs = soup.find_all('p')
+            for p in paragraphs:
+                p_text = p.text.strip()
+                if len(p_text) > 50:  # Only include substantial paragraphs
+                    info += f"{p_text}\n\n"
+                    
+            # Extract any header information
+            headers = soup.find_all(['h1', 'h2', 'h3'])
+            for header in headers:
+                header_text = header.text.strip()
+                if race_name not in header_text:  # Avoid duplicating the race name
+                    info += f"{header_text}\n"
+                    
+                    # Get the next element if it's a paragraph
+                    next_element = header.find_next_sibling()
+                    if next_element and next_element.name == 'p':
+                        p_text = next_element.text.strip()
+                        if p_text:
+                            info += f"  {p_text}\n\n"
+        
+        if info == f"Race Details for {race_name}:\n\n":
+            return f"Could not find specific details for race ID {race_id}."
+            
+        return info
+    except Exception as e:
+        return f"Error retrieving race details for race ID {race_id}: {str(e)}"
+
+@mcp.tool(
+    description="""Get detailed results for a specific edition of a cycling race.
+    This tool provides comprehensive results for a particular edition of a race, including rankings,
+    time gaps, and other relevant statistics. Results can be filtered by classification or stage.
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
+    Example usage:
+    - Get 2023 Tour de France general classification results (Race ID: 17, Year: 2023)
+    - Get 2022 Paris-Roubaix results (Race ID: 30, Year: 2022)
+    - Get results for stage 5 of 2023 Tour de France (Race ID: 17, Year: 2023, Stage: 5)
+    
+    Returns a formatted string with:
+    - Race name, year, and category
+    - Complete result list with rankings and time gaps
+    - Rider names and teams
+    - Classification or stage specific information"""
+)
+async def get_race_edition_results(race_id: int, year: int, classification_num: int = None, stage_num: int = None) -> str:
+    """Get detailed results for a specific edition of a cycling race.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+        year: The year of the race edition (e.g., 2023)
+        classification_num: Optional parameter to specify the classification (e.g., 1 for General Classification)
+        stage_num: Optional parameter to specify the stage number (e.g., 5 for stage 5)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get specific edition
+        race_edition = race.edition(year)
+        
+        # Get results
+        results = race_edition.results(classification_num, stage_num)
+        
+        # Build information string
+        info = ""
+        
+        # Check if we can parse the data
+        if not hasattr(results, 'soup') or not results.soup:
+            return f"No results found for race ID {race_id}, year {year}. The race may not have been held that year."
+        
+        soup = results.soup
+        
+        # Extract race name from title
+        title = soup.find('title')
+        race_name = title.text.split('|')[0].strip() if title and '|' in title.text else f"Race ID {race_id}"
+        
+        # Format title based on parameters
+        info += f"{year} {race_name}"
+        if stage_num is not None:
+            info += f" - Stage {stage_num}"
+        elif classification_num is not None:
+            classification_names = {
+                1: "General Classification",
+                2: "Points Classification",
+                3: "Mountains Classification",
+                4: "Youth Classification",
+                5: "Team Classification"
+            }
+            if classification_num in classification_names:
+                info += f" - {classification_names[classification_num]}"
+        info += " Results:\n\n"
+        
+        # Check if we have results DataFrame
+        if hasattr(results, 'results_df') and not (results.results_df is None or results.results_df.empty):
+            # Use standard parsing
+            results_df = results.results_df
+            
+            # Get top results (limit to 20 for readability)
+            results_df = results_df.head(20) if len(results_df) > 20 else results_df
+            
+            for _, row in results_df.iterrows():
+                pos = row.get('Pos', 'N/A')
+                rider = row.get('Rider', 'N/A')
+                team = row.get('Team', 'N/A')
+                time = row.get('Time', 'N/A')
+                
+                result_line = f"{pos}. {rider} ({team})"
+                if time and time != 'N/A':
+                    result_line += f" - {time}"
+                
+                info += result_line + "\n"
+            
+            if len(results_df) == 20:
+                info += "...\n"
+        else:
+            # Direct HTML parsing
+            # Find results table
+            results_table = None
+            tables = soup.find_all('table')
+            
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')]
+                if len(headers) >= 3 and "Pos" in headers:
+                    results_table = table
+                    break
+            
+            if not results_table:
+                return f"Could not find results table for race ID {race_id}, year {year}."
+            
+            # Parse results
+            rows = results_table.find_all('tr')
+            
+            # Get column indices
+            headers = [th.text.strip() for th in rows[0].find_all('th')]
+            pos_idx = next((i for i, h in enumerate(headers) if "Pos" in h), 0)
+            rider_idx = next((i for i, h in enumerate(headers) if "Rider" in h), 1)
+            team_idx = next((i for i, h in enumerate(headers) if "Team" in h), 2)
+            time_idx = next((i for i, h in enumerate(headers) if "Time" in h), 3)
+            
+            # Skip header row and limit to 20 results
+            max_rows = min(21, len(rows))
+            
+            for row in rows[1:max_rows]:
+                cols = row.find_all('td')
+                if len(cols) < 3:  # Ensure it's a data row
+                    continue
+                
+                pos = cols[pos_idx].text.strip() if pos_idx < len(cols) else "N/A"
+                
+                # Rider name can be in a link
+                rider_col = cols[rider_idx] if rider_idx < len(cols) else None
+                rider = rider_col.text.strip() if rider_col else "N/A"
+                
+                # Team can be in a link
+                team_col = cols[team_idx] if team_idx < len(cols) else None
+                team = team_col.text.strip() if team_col else "N/A"
+                
+                time = cols[time_idx].text.strip() if time_idx < len(cols) and time_idx < len(cols) else "N/A"
+                
+                result_line = f"{pos}. {rider} ({team})"
+                if time and time != 'N/A':
+                    result_line += f" - {time}"
+                
+                info += result_line + "\n"
+                
+            if len(rows) > 21:
+                info += "...\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving race results for race ID {race_id}, year {year}: {str(e)}"
+
+@mcp.tool(
+    description="""Get the startlist for a specific edition of a cycling race.
+    This tool provides a list of all riders and teams participating in a specific edition of a race.
+    The startlist can be retrieved in either standard or extended format, with the extended format
+    providing additional details about riders.
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
+    Example usage:
+    - Get startlist for 2023 Tour de France (Race ID: 17, Year: 2023)
+    - Get extended startlist for 2023 Paris-Roubaix (Race ID: 30, Year: 2023)
+    
+    Returns a formatted string with:
+    - Race name and year
+    - List of participating teams
+    - Riders for each team
+    - Additional rider details in extended format (optional)"""
+)
+async def get_race_startlist(race_id: int, year: int, extended: bool = False) -> str:
+    """Get the startlist for a specific edition of a cycling race.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+        year: The year of the race edition (e.g., 2023)
+        extended: Whether to retrieve the extended startlist with additional rider details
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get specific edition
+        race_edition = race.edition(year)
+        
+        # Get startlist (standard or extended)
+        if extended:
+            startlist = race_edition.startlist_extended()
+        else:
+            startlist = race_edition.startlist()
+        
+        # Build information string
+        info = ""
+        
+        # Check if we can parse the data
+        if not hasattr(startlist, 'soup') or not startlist.soup:
+            return f"No startlist found for race ID {race_id}, year {year}. The race may not have a published startlist yet."
+        
+        soup = startlist.soup
+        
+        # Extract race name from title
+        title = soup.find('title')
+        race_name = title.text.split('|')[0].strip() if title and '|' in title.text else f"Race ID {race_id}"
+        
+        # Format title based on startlist type
+        if extended:
+            info += f"{year} {race_name} - Extended Startlist:\n\n"
+        else:
+            info += f"{year} {race_name} - Startlist:\n\n"
+        
+        # Check if we have a structured DataFrame
+        if hasattr(startlist, 'startlist_df') and not (startlist.startlist_df is None or startlist.startlist_df.empty):
+            # Use standard parsing with DataFrame
+            startlist_df = startlist.startlist_df
+            
+            # Group by team
+            teams = startlist_df['Team'].unique()
+            
+            for team in teams:
+                info += f"{team}:\n"
+                
+                # Get riders for this team
+                team_riders = startlist_df[startlist_df['Team'] == team]
+                
+                for _, rider in team_riders.iterrows():
+                    number = rider.get('Number', '')
+                    name = rider.get('Rider', 'Unknown Rider')
+                    
+                    # Add additional info for extended startlist
+                    if extended and 'Age' in rider:
+                        age = rider.get('Age', '')
+                        uci_points = rider.get('UCI Points', '')
+                        result_line = f"  {number} {name}"
+                        if age:
+                            result_line += f" (Age: {age}"
+                            if uci_points:
+                                result_line += f", UCI Points: {uci_points})"
+                            else:
+                                result_line += ")"
+                    else:
+                        result_line = f"  {number} {name}"
+                    
+                    info += result_line + "\n"
+                
+                info += "\n"
+        else:
+            # Direct HTML parsing
+            # Find startlist table(s)
+            startlist_tables = []
+            tables = soup.find_all('table')
+            
+            for table in tables:
+                # Look for tables that might contain startlist info
+                if table.find('th'):  # Must have header row
+                    headers = [th.text.strip() for th in table.find_all('th')]
+                    if any(header in headers for header in ['Rider', 'Team']):
+                        startlist_tables.append(table)
+            
+            if not startlist_tables:
+                return f"Could not find startlist table for race ID {race_id}, year {year}."
+            
+            # If we have team-based startlists (common format)
+            team_headings = soup.find_all(['h2', 'h3', 'h4'])
+            team_based = False
+            
+            for heading in team_headings:
+                next_table = heading.find_next('table')
+                if next_table:
+                    team_based = True
+                    team_name = heading.text.strip()
+                    info += f"{team_name}:\n"
+                    
+                    # Parse riders from table
+                    rows = next_table.find_all('tr')
+                    for row in rows[1:]:  # Skip header row
+                        cols = row.find_all('td')
+                        if len(cols) < 2:
+                            continue
+                        
+                        # Extract rider info (format varies)
+                        if len(cols) >= 3:
+                            number = cols[0].text.strip()
+                            name = cols[1].text.strip()
+                            
+                            result_line = f"  {number} {name}"
+                            
+                            # Add additional info for extended startlist
+                            if extended and len(cols) >= 4:
+                                additional_info = []
+                                for i in range(3, min(6, len(cols))):
+                                    info_text = cols[i].text.strip()
+                                    if info_text:
+                                        additional_info.append(info_text)
+                                
+                                if additional_info:
+                                    result_line += f" ({', '.join(additional_info)})"
+                        else:
+                            # Simplified format
+                            result_line = f"  {cols[0].text.strip()}"
+                        
+                        info += result_line + "\n"
+                    
+                    info += "\n"
+            
+            # If not team-based, process each table directly
+            if not team_based:
+                for table in startlist_tables:
+                    rows = table.find_all('tr')
+                    
+                    # Get column indices
+                    headers = [th.text.strip() for th in rows[0].find_all('th')] if rows[0].find_all('th') else []
+                    
+                    # Find column indices
+                    team_idx = next((i for i, h in enumerate(headers) if "Team" in h), None)
+                    number_idx = next((i for i, h in enumerate(headers) if "Nr" in h or "Number" in h), 0)
+                    rider_idx = next((i for i, h in enumerate(headers) if "Rider" in h), 1)
+                    
+                    # Process the table
+                    current_team = ""
+                    
+                    for row in rows[1:]:  # Skip header row
+                        cols = row.find_all('td')
+                        if len(cols) < 2:
+                            continue
+                        
+                        # Check if this is a team row or rider row
+                        if team_idx is not None and team_idx < len(cols):
+                            team_text = cols[team_idx].text.strip()
+                            if team_text and team_text != current_team:
+                                current_team = team_text
+                                info += f"{current_team}:\n"
+                        
+                        # Extract rider info
+                        number = cols[number_idx].text.strip() if number_idx < len(cols) else ""
+                        rider = cols[rider_idx].text.strip() if rider_idx < len(cols) else "Unknown Rider"
+                        
+                        # Add additional info for extended startlist
+                        if extended and len(cols) >= 4:
+                            additional_info = []
+                            for i in range(3, min(6, len(cols))):
+                                info_text = cols[i].text.strip()
+                                if info_text:
+                                    additional_info.append(info_text)
+                            
+                            result_line = f"  {number} {rider}"
+                            if additional_info:
+                                result_line += f" ({', '.join(additional_info)})"
+                        else:
+                            result_line = f"  {number} {rider}"
+                        
+                        info += result_line + "\n"
+                    
+                    info += "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving startlist for race ID {race_id}, year {year}: {str(e)}"
+
+@mcp.tool(
+    description="""Get the all-time victory table for a cycling race.
+    This tool provides a historical summary of the most successful riders in a specific race,
+    showing the number of victories for each rider throughout the race's history.
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
+    Example usage:
+    - Get victory table for Tour de France (ID: 17)
+    - Get victory table for Paris-Roubaix (ID: 30)
+    
+    Returns a formatted string with:
+    - Race name
+    - List of riders with the most victories
+    - Number of victories for each rider
+    - Years of victories where available"""
+)
+async def get_race_victory_table(race_id: int) -> str:
+    """Get the all-time victory table for a cycling race.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get victory table
+        victory_table = race.victory_table()
+        
+        # Build information string
+        info = ""
+        
+        # Check if we can parse the data
+        if not hasattr(victory_table, 'soup') or not victory_table.soup:
+            return f"No victory table found for race ID {race_id}. This race ID may not exist."
+        
+        soup = victory_table.soup
+        
+        # Extract race name from title
+        title = soup.find('title')
+        race_name = title.text.split('|')[0].strip() if title and '|' in title.text else f"Race ID {race_id}"
+        
+        info += f"Victory Table for {race_name}:\n\n"
+        
+        # Check if we have results DataFrame
+        if hasattr(victory_table, 'results_df') and not (victory_table.results_df is None or victory_table.results_df.empty):
+            # Use standard parsing
+            results_df = victory_table.results_df
+            
+            # Get top entries (limit to 20 for readability)
+            results_df = results_df.head(20) if len(results_df) > 20 else results_df
+            
+            for i, (_, row) in enumerate(results_df.iterrows()):
+                pos = i + 1
+                rider = row.get('Rider', 'N/A')
+                wins = row.get('Wins', 'N/A')
+                years = row.get('Years', '')
+                
+                result_line = f"{pos}. {rider}: {wins} win"
+                if wins != '1' and wins != 1:
+                    result_line += "s"
+                
+                if years:
+                    result_line += f" ({years})"
+                
+                info += result_line + "\n"
+        else:
+            # Direct HTML parsing
+            # Find victory table
+            victory_table_el = None
+            tables = soup.find_all('table')
+            
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')]
+                if any(header in ' '.join(headers) for header in ['Wins', 'Victory', 'Victories']):
+                    victory_table_el = table
+                    break
+            
+            if not victory_table_el:
+                return f"Could not find victory table for race ID {race_id}."
+            
+            # Parse victory data
+            rows = victory_table_el.find_all('tr')
+            
+            # Get column indices
+            headers = [th.text.strip() for th in rows[0].find_all('th')]
+            rider_idx = next((i for i, h in enumerate(headers) if "Rider" in h), 0)
+            wins_idx = next((i for i, h in enumerate(headers) if "Wins" in h or "Victories" in h), 1)
+            years_idx = next((i for i, h in enumerate(headers) if "Years" in h or "Year" in h), 2)
+            
+            # Skip header row and limit to 20 entries
+            max_rows = min(21, len(rows))
+            
+            for i, row in enumerate(rows[1:max_rows]):
+                cols = row.find_all('td')
+                if len(cols) < 2:  # Ensure it's a data row
+                    continue
+                
+                pos = i + 1
+                
+                # Rider name can be in a link
+                rider_col = cols[rider_idx] if rider_idx < len(cols) else None
+                rider = rider_col.text.strip() if rider_col else "N/A"
+                
+                wins = cols[wins_idx].text.strip() if wins_idx < len(cols) else "N/A"
+                years = cols[years_idx].text.strip() if years_idx < len(cols) and years_idx < len(cols) else ""
+                
+                result_line = f"{pos}. {rider}: {wins} win"
+                if wins != '1':
+                    result_line += "s"
+                
+                if years:
+                    result_line += f" ({years})"
+                
+                info += result_line + "\n"
+            
+            if len(rows) > 21:
+                info += "...\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving victory table for race ID {race_id}: {str(e)}"
+
+@mcp.tool(
+    description="""Get stage profiles for a specific edition of a stage race.
+    This tool retrieves information about all stages in a multi-day race, including
+    distances, elevation profiles, and stage types.
+    
+    Note: If you don't know the race's ID, use the search_race tool first to find it by name.
+    
+    Example usage:
+    - Get stage profiles for 2023 Tour de France (Race ID: 17, Year: 2023)
+    - Get stage profiles for 2023 Giro d'Italia (Race ID: 13, Year: 2023)
+    
+    Returns a formatted string with:
+    - Race name and year
+    - List of all stages
+    - Stage distance, type, and description
+    - Start and finish locations for each stage"""
+)
+async def get_race_stage_profiles(race_id: int, year: int) -> str:
+    """Get stage profiles for a specific edition of a stage race.
+
+    Args:
+        race_id: The FirstCycling race ID (e.g., 17 for Tour de France)
+        year: The year of the race edition (e.g., 2023)
+    """
+    try:
+        # Create a race instance
+        race = Race(race_id)
+        
+        # Get specific edition
+        race_edition = race.edition(year)
+        
+        # Get stage profiles
+        stage_profiles = race_edition.stage_profiles()
+        
+        # Build information string
+        info = ""
+        
+        # Check if we can parse the data
+        if not hasattr(stage_profiles, 'soup') or not stage_profiles.soup:
+            return f"No stage profiles found for race ID {race_id}, year {year}. This might not be a stage race or the profiles may not be available."
+        
+        soup = stage_profiles.soup
+        
+        # Extract race name from title
+        title = soup.find('title')
+        race_name = title.text.split('|')[0].strip() if title and '|' in title.text else f"Race ID {race_id}"
+        
+        info += f"{year} {race_name} - Stage Profiles:\n\n"
+        
+        # Check if we have a structured DataFrame
+        if hasattr(stage_profiles, 'stages_df') and not (stage_profiles.stages_df is None or stage_profiles.stages_df.empty):
+            # Use standard parsing with DataFrame
+            stages_df = stage_profiles.stages_df
+            
+            for _, row in stages_df.iterrows():
+                stage = row.get('Stage', 'N/A')
+                date = row.get('Date', 'N/A')
+                route = row.get('Route', 'N/A')
+                distance = row.get('Distance', 'N/A')
+                type_info = row.get('Type', '')
+                
+                info += f"Stage {stage} - {date}:\n"
+                info += f"  Route: {route}\n"
+                info += f"  Distance: {distance}\n"
+                if type_info:
+                    info += f"  Type: {type_info}\n"
+                
+                info += "\n"
+        else:
+            # Direct HTML parsing
+            # Find stage profiles table
+            stages_table = None
+            tables = soup.find_all('table')
+            
+            for table in tables:
+                headers = [th.text.strip() for th in table.find_all('th')]
+                if len(headers) >= 3 and any(keyword in ' '.join(headers).lower() 
+                                          for keyword in ['stage', 'date', 'route', 'distance']):
+                    stages_table = table
+                    break
+            
+            if not stages_table:
+                # Look for any table that might contain stage info
+                for table in tables:
+                    rows = table.find_all('tr')
+                    if len(rows) >= 3:  # Header + at least 2 data rows
+                        first_row_cells = rows[1].find_all('td')
+                        if len(first_row_cells) >= 3:
+                            # If first cell looks like stage number (short text)
+                            first_cell = first_row_cells[0].text.strip()
+                            if len(first_cell) <= 3 or "stage" in first_cell.lower():
+                                stages_table = table
+                                break
+            
+            if not stages_table:
+                return f"Could not find stage profiles table for race ID {race_id}, year {year}."
+            
+            # Parse stages data
+            rows = stages_table.find_all('tr')
+            if len(rows) <= 1:  # Only header row, no data
+                return f"No stage profiles found for race ID {race_id}, year {year}."
+            
+            # Get headers to determine column positions
+            headers = [th.text.strip() for th in rows[0].find_all('th')] if rows[0].find_all('th') else []
+            
+            # Find column indices
+            stage_idx = next((i for i, h in enumerate(headers) if "Stage" in h), 0)
+            date_idx = next((i for i, h in enumerate(headers) if "Date" in h), 1)
+            route_idx = next((i for i, h in enumerate(headers) if "Route" in h), 2)
+            distance_idx = next((i for i, h in enumerate(headers) if "Distance" in h or "Km" in h), 3)
+            type_idx = next((i for i, h in enumerate(headers) if "Type" in h), None)
+            
+            # Skip header row
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) < 3:  # Ensure it's a data row
+                    continue
+                
+                # Extract data
+                stage = cols[stage_idx].text.strip() if stage_idx < len(cols) else "N/A"
+                date = cols[date_idx].text.strip() if date_idx < len(cols) else "N/A"
+                route = cols[route_idx].text.strip() if route_idx < len(cols) else "N/A"
+                distance = cols[distance_idx].text.strip() if distance_idx < len(cols) else "N/A"
+                type_info = cols[type_idx].text.strip() if type_idx is not None and type_idx < len(cols) else ""
+                
+                info += f"Stage {stage} - {date}:\n"
+                info += f"  Route: {route}\n"
+                info += f"  Distance: {distance}\n"
+                if type_info:
+                    info += f"  Type: {type_info}\n"
+                
+                info += "\n"
+        
+        return info
+    except Exception as e:
+        return f"Error retrieving stage profiles for race ID {race_id}, year {year}: {str(e)}"
+
+@mcp.tool(
+    description="""Get UCI rankings for riders, teams, or nations.
+    This tool provides access to the UCI ranking data for professional cyclists, teams, or nations.
+    Results can be filtered by ranking type, year, and category.
+    
+    Example usage:
+    - Get World UCI rider rankings for 2023
+    - Get Europe Tour UCI team rankings for 2022
+    - Get UCI nation rankings for 2023 in the World category
+    
+    Returns a formatted string with:
+    - Ranking list with positions and points
+    - Filtered by specified categories
+    - Organized in a readable format
+    - Option to filter by country"""
+)
+async def get_uci_rankings(rank_type: str = "riders", category: str = "world", year: int = None, country_code: str = None, page_num: int = 1) -> str:
+    """Get UCI rankings for riders, teams, or nations.
+
+    Args:
+        rank_type: The type of ranking to retrieve (riders, teams, or nations)
+        category: The UCI ranking category (world, one-day, stage, europe, america, asia, africa, oceania)
+        year: The year for the rankings (defaults to current year if None)
+        country_code: Optional three-letter code to filter by country (e.g., "BEL" for Belgium)
+        page_num: The page number for the results (default is 1)
+    """
+    try:
+        # Map rank_type to h parameter
+        h_params = {
+            "riders": 1,
+            "teams": 2,
+            "nations": 3
+        }
+        
+        # Map category to rank parameter
+        rank_params = {
+            "world": 1,
+            "one-day": 2,
+            "stage": 3,
+            "africa": 4,
+            "america": 5,
+            "europe": 6,
+            "asia": 7,
+            "oceania": 8,
+            "women": 99
+        }
+        
+        # Get the parameter values
+        h = h_params.get(rank_type.lower(), 1)  # Default to riders
+        rank = rank_params.get(category.lower(), 1)  # Default to world
+        
+        # Create parameters dict
+        params = {
+            "h": h,
+            "rank": rank,
+            "page_num": page_num
+        }
+        
+        # Add optional parameters
+        if year:
+            params["y"] = year
+        
+        if country_code:
+            params["cnat"] = country_code.upper()
+        
+        # Get rankings
+        rankings = Ranking(**params)
+        
+        # Build information string
+        info = ""
+        
+        # Format title
+        category_name = category.capitalize()
+        rank_type_name = rank_type.capitalize()
+        
+        # Get year string
+        year_str = str(year) if year else "Current"
+        
+        # Build title
+        info += f"UCI {category_name} {rank_type_name} Rankings - {year_str}"
+        if country_code:
+            info += f" ({country_code.upper()})"
+        
+        info += f" - Page {page_num}:\n\n"
+        
+        # Check if we can parse the data
+        if not hasattr(rankings, 'soup') or not rankings.soup:
+            return f"No UCI rankings found for the specified parameters."
+        
+        soup = rankings.soup
+        
+        # Find rankings table
+        rankings_table = None
+        tables = soup.find_all('table')
+        
+        for table in tables:
+            headers = [th.text.strip() for th in table.find_all('th')]
+            if len(headers) >= 3 and ("Rank" in headers or "Pos" in headers or "Ranking" in headers):
+                rankings_table = table
+                break
+        
+        if not rankings_table:
+            # Try to find any table with ranking-like structure
+            for table in tables:
+                rows = table.find_all('tr')
+                if len(rows) >= 3:  # Header + at least 2 data rows
+                    # Check if first cell might be a position/rank
+                    first_row_cols = rows[1].find_all('td')
+                    if len(first_row_cols) >= 3 and first_row_cols[0].text.strip().isdigit():
+                        rankings_table = table
+                        break
+        
+        if not rankings_table:
+            return f"Could not find rankings table for the specified parameters."
+        
+        # Parse rankings data
+        rows = rankings_table.find_all('tr')
+        
+        # Get headers to determine column positions
+        headers = [th.text.strip() for th in rows[0].find_all('th')] if rows[0].find_all('th') else []
+        
+        # Find column indices based on rank type
+        if rank_type.lower() == "riders":
+            pos_idx = next((i for i, h in enumerate(headers) if "Rank" in h or "Pos" in h), 0)
+            name_idx = next((i for i, h in enumerate(headers) if "Rider" in h or "Name" in h), 1)
+            team_idx = next((i for i, h in enumerate(headers) if "Team" in h), 2)
+            points_idx = next((i for i, h in enumerate(headers) if "Points" in h), 3)
+            
+            # Skip header row
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) < 3:  # Ensure it's a data row
+                    continue
+                
+                pos = cols[pos_idx].text.strip() if pos_idx < len(cols) else "N/A"
+                name = cols[name_idx].text.strip() if name_idx < len(cols) else "N/A"
+                team = cols[team_idx].text.strip() if team_idx < len(cols) and team_idx < len(cols) else "N/A"
+                points = cols[points_idx].text.strip() if points_idx < len(cols) and points_idx < len(cols) else "N/A"
+                
+                info += f"{pos}. {name} ({team}): {points} pts\n"
+        
+        elif rank_type.lower() == "teams":
+            pos_idx = next((i for i, h in enumerate(headers) if "Rank" in h or "Pos" in h), 0)
+            team_idx = next((i for i, h in enumerate(headers) if "Team" in h), 1)
+            points_idx = next((i for i, h in enumerate(headers) if "Points" in h), 2)
+            
+            # Skip header row
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) < 3:  # Ensure it's a data row
+                    continue
+                
+                pos = cols[pos_idx].text.strip() if pos_idx < len(cols) else "N/A"
+                team = cols[team_idx].text.strip() if team_idx < len(cols) else "N/A"
+                points = cols[points_idx].text.strip() if points_idx < len(cols) and points_idx < len(cols) else "N/A"
+                
+                info += f"{pos}. {team}: {points} pts\n"
+        
+        elif rank_type.lower() == "nations":
+            pos_idx = next((i for i, h in enumerate(headers) if "Rank" in h or "Pos" in h), 0)
+            nation_idx = next((i for i, h in enumerate(headers) if "Nation" in h or "Country" in h), 1)
+            points_idx = next((i for i, h in enumerate(headers) if "Points" in h), 2)
+            
+            # Skip header row
+            for row in rows[1:]:
+                cols = row.find_all('td')
+                if len(cols) < 3:  # Ensure it's a data row
+                    continue
+                
+                pos = cols[pos_idx].text.strip() if pos_idx < len(cols) else "N/A"
+                nation = cols[nation_idx].text.strip() if nation_idx < len(cols) else "N/A"
+                points = cols[points_idx].text.strip() if points_idx < len(cols) and points_idx < len(cols) else "N/A"
+                
+                info += f"{pos}. {nation}: {points} pts\n"
+        
+        # Include pagination info if available
+        pagination = soup.find('div', class_='pagination')
+        if pagination:
+            info += "\n"
+            # Find the last page number if available
+            last_page_link = pagination.find_all('a')[-1] if pagination.find_all('a') else None
+            if last_page_link and last_page_link.text.strip().isdigit():
+                total_pages = int(last_page_link.text.strip())
+                info += f"Page {page_num} of {total_pages}\n"
+        
+        if info.count('\n') <= 2:  # Only contains title and maybe pagination info
+            return f"No rankings data found for the specified parameters."
+            
+        return info
+    except Exception as e:
+        return f"Error retrieving UCI rankings: {str(e)}"
