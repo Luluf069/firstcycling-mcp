@@ -2310,8 +2310,8 @@ async def get_start_list(race_id: int, year: int = None) -> str:
                 flag = cols[1].find('span', class_=lambda x: x and x.startswith('flag flag-'))
                 nationality = flag['class'][1].replace('flag-', '').upper() if flag else ''
                 
-                # Format rider line
-                rider_line = f"{number}. {last_name} {first_name}"
+                # Format rider line with both first and last names
+                rider_line = f"{number}. {first_name} {last_name}"
                 if nationality:
                     rider_line += f" ({nationality})"
                 if is_not_starting:
