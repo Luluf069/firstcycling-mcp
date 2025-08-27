@@ -7,7 +7,7 @@ from first_cycling_api.rider.rider import Rider
 import pandas as pd
 import sys
 
-def get_rider_victories(rpip install pandaspip install pandaspip install pandaspip install pandasider_id):
+def get_rider_victories(rider_id):
     """Get a rider's victories from FirstCycling"""
     rider = Rider(rider_id)
     
